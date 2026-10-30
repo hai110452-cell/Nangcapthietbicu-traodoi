@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%" fill="none">
+  <defs>
+    <!-- Gradient cho vòng tròn ngoài: Xanh lá mạ -> Xanh ngọc lục bảo -> Xanh Cyan -> Xanh Biển -->
+    <linearGradient id="cepRingGrad" x1="15%" y1="10%" x2="85%" y2="90%">
+      <stop offset="0%" stop-color="#4ade80" />
+      <stop offset="25%" stop-color="#22c55e" />
+      <stop offset="55%" stop-color="#14b8a6" />
+      <stop offset="80%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+
+    <!-- Gradient cho chữ C vàng ánh kim -->
+    <linearGradient id="cepGoldGrad" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="30%" stop-color="#facc15" />
+      <stop offset="70%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+
+    <!-- Gradient cho chiếc lá xanh năng động -->
+    <linearGradient id="cepLeafGrad" x1="10%" y1="90%" x2="90%" y2="10%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="35%" stop-color="#10b981" />
+      <stop offset="75%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#6ee7b7" />
+    </linearGradient>
+
+    <!-- Gradient cho cuống lá -->
+    <linearGradient id="cepStemGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#047857" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+
+    <!-- Hiệu ứng bóng phát sáng tinh tế -->
+    <filter id="cepGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#10b981" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <g filter="url(#cepGlow)">
+    <!-- 1. Vòng tròn ngoài (Outer Circular Loop) -->
+    <circle
+      cx="50"
+      cy="50"
+      r="40"
+      stroke="url(#cepRingGrad)"
+      stroke-width="7"
+      stroke-linecap="round"
+    />
+
+    <!-- 2. Chữ "C" màu vàng kim biểu trưng cho Cash / Circle / Customer -->
+    <path
+      d="M 52 27 C 36 27, 26 37, 26 50 C 26 63, 36 73, 53 73"
+      stroke="url(#cepGoldGrad)"
+      stroke-width="7"
+      stroke-linecap="round"
+    />
+
+    <!-- 3. Cuống lá xanh vút từ góc dưới trái đi xuyên qua tâm -->
+    <path
+      d="M 19 75 C 24 67, 34 52, 48 38"
+      stroke="url(#cepStemGrad)"
+      stroke-width="4.5"
+      stroke-linecap="round"
+    />
+
+    <!-- 4. Chiếc lá xanh biểu trưng cho Điểm Xanh (Green Leaf) -->
+    <path
+      d="M 43 45 C 41 33, 53 20, 77 15 C 76 39, 63 51, 48 51 C 45 51, 43 48, 43 45 Z"
+      fill="url(#cepLeafGrad)"
+    />
+
+    <!-- Gân lá mềm mại -->
+    <path
+      d="M 45 47 Q 58 34, 74 18"
+      stroke="#d1fae5"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      opacity="0.9"
+    />
+  </g>
+</svg>

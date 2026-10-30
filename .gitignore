@@ -1,0 +1,36 @@
+# Dependencies
+**/node_modules/
+
+# Build output
+/BEv2/dist/
+/FEv2/.next/
+/FEv2/out/
+**/coverage/
+
+# Environment files and local secrets
+.env
+# .env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor temporary files
+*.swp
+*.swo
+*.tmp
+
+# TypeScript incremental build output
+*.tsbuildinfo
+
+# Vercel deployment output
+.vercel/

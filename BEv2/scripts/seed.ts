@@ -1,0 +1,9 @@
+import 'dotenv/config';
+import { DataSource } from 'typeorm';
+async function main(){const url=process.env.DATABASE_URL;if(!url)throw new Error('Thiếu DATABASE_URL trong .env');const pool=new DataSource({type:'postgres',url,synchronize:false,ssl:process.env.DATABASE_SSL==='true'?{rejectUnauthorized:false}:false,entities:[],migrations:[]});await pool.initialize();try{
+ await pool.query(`INSERT INTO categories(code,name,icon,sort_order) VALUES ('laptop','Laptop','💻',1),('pc','Máy tính bàn PC','🖥️',2),('iphone','Điện thoại iPhone','📱',3),('android','Điện thoại Android','📱',4) ON CONFLICT(code) DO NOTHING`);
+ await pool.query(`INSERT INTO website_settings(id,brand_name,brand_slogan,hero_title,hero_highlight,hero_description,hero_badge_text,hotline,support_email,inspection_address,announcement_banner,announcement_active) VALUES(1,'CEP.EXCHANGE','Nền Tảng Trao Đổi Máy Tính & Điện Thoại','Nâng Cấp Thiết Bị Cũ — Trao Đổi','Máy Tính & Điện Thoại Thông Minh','Nền tảng kết nối trực tiếp những người dùng có nhu cầu chuyển đổi thiết bị công nghệ.','Kết nối trao đổi thiết bị an toàn','1900 6868','hotro@cep-exchange.vn','Trung tâm CEP Care: 123 Nguyễn Huệ, Quận 1, TP.HCM & 45 Cầu Giấy, Hà Nội','',false) ON CONFLICT(id) DO NOTHING`);
+ await pool.query(`INSERT INTO rewards(title,cost_points,category,icon,description,discount_value) VALUES ('Voucher kiểm định thiết bị',200,'voucher','🎟️','Ưu đãi cho dịch vụ kiểm định thiết bị','Giảm 50.000 đ'),('Gói kiểm định CEP Care',500,'service','🛡️','Kiểm tra thiết bị tại trung tâm CEP Care','1 lần kiểm định'),('Quà tặng CEP',800,'gift','🎁','Quà tặng dành cho thành viên tích cực','Quà tặng') ON CONFLICT DO NOTHING`);
+ console.log('Seed dữ liệu danh mục, cấu hình website và phần thưởng hoàn tất.');
+ }finally{await pool.destroy();}}
+main().catch(e=>{console.error('Seed thất bại:',e.message);process.exit(1);});
