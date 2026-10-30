@@ -20,6 +20,8 @@ export interface ExchangeItem {
   title: string;
   gradientBg: string;
   deviceIcon: string;
+  /** Ảnh Cloudinary của tin đăng, do API /listings trả về */
+  images?: Array<{ id?: string; url: string; sortOrder?: number }>;
   categoryName: string;
   type: "Đổi ngang" | "Bù trừ";
   specs: string[];

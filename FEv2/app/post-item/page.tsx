@@ -4,25 +4,20 @@ import Navbar from "../components/Navbar";
 import Link from "next/link";
 import { api, getAccessToken, moneyToNumber } from "../lib/api";
 
-interface SampleImage {
-  name: string;
-  icon: string;
-  previewUrl: string;
-  brand: string;
-  category: "laptop" | "pc" | "iphone" | "android";
-  model: string;
-  specs: string[];
-  suggestedPrice: string;
-  condition: string;
+interface SelectedImage { file: File; previewUrl: string; id: string; }
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Không thể đọc tệp ảnh."));
+    reader.onerror = () => reject(new Error("Không thể đọc tệp ảnh."));
+    reader.readAsDataURL(file);
+  });
 }
 
-const samplePresets: SampleImage[] = [];
-
 export default function PostItemPage() {
-  const [selectedPreset, setSelectedPreset] = useState<SampleImage | null>(null);
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanStep, setScanStep] = useState(0);
-  const [aiConfidence, setAiConfidence] = useState<number | null>(null);
+  const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
+  const [uploadProgress, setUploadProgress] = useState("");
 
   // Form Fields
   const [title, setTitle] = useState("");
@@ -35,25 +30,28 @@ export default function PostItemPage() {
   const [conditionDesc, setConditionDesc] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Kích hoạt mô phỏng quét AI Computer Vision
-  const handleTriggerAIScan = (preset: SampleImage) => {
-    setSelectedPreset(preset);
-    setIsScanning(true);
-    setScanStep(1);
-    setAiConfidence(null);
-    setTimeout(() => setScanStep(2), 700);
-    setTimeout(() => setScanStep(3), 1500);
-    setTimeout(() => {
-      setScanStep(4);
-      setAiConfidence(98.6);
-      setIsScanning(false);
-      setTitle(preset.model);
-      setCategory(preset.category);
-      setEstimatedValue(preset.suggestedPrice);
-      setSpecsText(preset.specs.join("\n"));
-      setConditionDesc(preset.condition);
-      setTargetDemand("Muốn đổi: Laptop hoặc điện thoại ngang tầm giá trị, có bù trừ linh hoạt");
-    }, 2200);
+  const handleSelectImages = (files: FileList | null) => {
+    if (!files) return;
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+    const incoming = Array.from(files);
+    const remaining = 6 - selectedImages.length;
+    if (remaining <= 0) { setSubmitError("Bạn chỉ có thể tải tối đa 6 ảnh cho mỗi tin đăng."); return; }
+    const valid: SelectedImage[] = [];
+    for (const file of incoming.slice(0, remaining)) {
+      if (!allowed.includes(file.type)) { setSubmitError(`Tệp ${file.name} không đúng định dạng. Chỉ nhận JPEG, PNG, WebP hoặc AVIF.`); continue; }
+      if (file.size > 5 * 1024 * 1024) { setSubmitError(`Ảnh ${file.name} vượt quá dung lượng 5 MB.`); continue; }
+      valid.push({ file, previewUrl: URL.createObjectURL(file), id: `${file.name}-${file.lastModified}-${Math.random()}` });
+    }
+    if (incoming.length > remaining) setSubmitError("Chỉ có thể chọn tối đa 6 ảnh.");
+    if (valid.length) { setSelectedImages((current) => [...current, ...valid]); setSubmitError(""); }
+  };
+
+  const removeSelectedImage = (id: string) => {
+    setSelectedImages((current) => {
+      const target = current.find((image) => image.id === id);
+      if (target) URL.revokeObjectURL(target.previewUrl);
+      return current.filter((image) => image.id !== id);
+    });
   };
 
   const [submitError, setSubmitError] = useState("");
@@ -74,6 +72,14 @@ export default function PostItemPage() {
     setIsSubmitting(true);
     try {
       const specs = specsText.split("\n").reduce<Record<string, string>>((result, line, index) => { const value = line.trim(); if (value) result[String(index + 1)] = value; return result; }, {});
+      const imageUrls: string[] = [];
+      for (let index = 0; index < selectedImages.length; index++) {
+        setUploadProgress(`Đang tải ảnh ${index + 1}/${selectedImages.length} lên Cloudinary...`);
+        const data = await fileToDataUrl(selectedImages[index].file);
+        const uploaded = await api<{ url: string }>("/uploads/images", { method: "POST", body: JSON.stringify({ fileName: selectedImages[index].file.name, mimeType: selectedImages[index].file.type, data }) });
+        imageUrls.push(uploaded.url);
+      }
+      setUploadProgress("Đang lưu tin đăng...");
       await api("/listings", { method: "POST", body: JSON.stringify({
         title: title.trim(),
         description: conditionDesc.trim(),
@@ -84,12 +90,14 @@ export default function PostItemPage() {
         exchangeType: type === "Đổi ngang" ? "even" : "compensation",
         targetDemand: targetDemand.trim(),
         location: location.trim(),
+        images: imageUrls,
       }) });
       setIsSuccess(true);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Không thể gửi tin đăng lên máy chủ.");
     } finally {
       setIsSubmitting(false);
+      setUploadProgress("");
     }
   };
 
@@ -163,7 +171,8 @@ export default function PostItemPage() {
               <button
                 onClick={() => {
                   setIsSuccess(false);
-                  setSelectedPreset(null);
+                  selectedImages.forEach((image) => URL.revokeObjectURL(image.previewUrl));
+                  setSelectedImages([]);
                   setTitle("");
                 }}
                 style={{
@@ -184,157 +193,31 @@ export default function PostItemPage() {
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1.3fr", gap: "32px", alignItems: "start" }}>
-            {/* Cột trái: Khu vực tải ảnh & Quét AI */}
+            {/* Cột trái: Chọn ảnh thiết bị */}
             <div>
-              <div
-                style={{
-                  background: "#ffffff",
-                  borderRadius: "18px",
-                  padding: "24px",
-                  border: "1px solid #e2e8f0",
-                  boxShadow: "0 4px 15px rgba(0,0,0,0.03)",
-                  marginBottom: "20px",
-                }}
-              >
-                <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#0f172a", marginBottom: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span>📸</span> Ảnh Thiết Bị (chưa hỗ trợ tải lên)
+              <div style={{ background: "#ffffff", borderRadius: "18px", padding: "24px", border: "1px solid #e2e8f0", boxShadow: "0 4px 15px rgba(0,0,0,0.03)", marginBottom: "20px" }}>
+                <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#0f172a", marginBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span>📸</span> Ảnh thiết bị
                 </h3>
-
-                {/* Khung quét AI */}
-                <div
-                  style={{
-                    height: "240px",
-                    borderRadius: "14px",
-                    background: selectedPreset ? selectedPreset.previewUrl : "linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    position: "relative",
-                    overflow: "hidden",
-                    border: isScanning ? "2px solid #059669" : "2px dashed #cbd5e1",
-                    color: selectedPreset ? "#ffffff" : "#64748b",
-                    transition: "all 0.3s ease",
-                  }}
-                >
-                  {isScanning && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        background: "rgba(5, 150, 105, 0.25)",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backdropFilter: "blur(4px)",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "80%",
-                          height: "3px",
-                          background: "#34d399",
-                          boxShadow: "0 0 20px 6px #10b981",
-                          animation: "scanningBeam 1s infinite alternate ease-in-out",
-                          marginBottom: "16px",
-                        }}
-                      ></div>
-                      <div style={{ background: "rgba(15, 23, 42, 0.85)", padding: "8px 16px", borderRadius: "20px", fontSize: "13px", fontWeight: "700", color: "#fff" }}>
-                        {scanStep === 1 && "🔍 [1/3] Quét đường viền & Nhận diện vật thể..."}
-                        {scanStep === 2 && "🧠 [2/3] Đối chiếu thư viện phần cứng AI..."}
-                        {scanStep === 3 && "✨ [3/3] Đánh giá ngoại quan & Khuyến nghị giá..."}
+                <p style={{ color: "#64748b", fontSize: "12px", marginBottom: "14px", lineHeight: 1.6 }}>Tải tối đa 6 ảnh, mỗi ảnh không quá 5 MB. Hỗ trợ JPG, PNG, WebP và AVIF. Ảnh sẽ được lưu trên Cloudinary.</p>
+                <label htmlFor="listing-images" style={{ minHeight: "150px", borderRadius: "14px", background: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "2px dashed #86efac", color: "#047857", cursor: "pointer", padding: "20px", textAlign: "center" }}>
+                  <span style={{ fontSize: "38px", marginBottom: "8px" }}>☁️</span>
+                  <strong style={{ fontSize: "14px" }}>Chọn ảnh từ thiết bị</strong>
+                  <span style={{ fontSize: "12px", marginTop: "5px", color: "#64748b" }}>Nhấn để chọn ảnh từ máy tính hoặc điện thoại</span>
+                </label>
+                <input id="listing-images" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple disabled={isSubmitting || selectedImages.length >= 6} onChange={(e) => { handleSelectImages(e.target.files); e.currentTarget.value = ""; }} style={{ display: "none" }} />
+                {selectedImages.length > 0 && (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px", marginTop: "16px" }}>
+                    {selectedImages.map((image, index) => (
+                      <div key={image.id} style={{ position: "relative", borderRadius: "12px", overflow: "hidden", border: "1px solid #e2e8f0", background: "#f8fafc", aspectRatio: "4 / 3" }}>
+                        <img src={image.previewUrl} alt={`Ảnh thiết bị ${index + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <span style={{ position: "absolute", left: 7, bottom: 7, padding: "3px 7px", borderRadius: 6, background: "rgba(15,23,42,.75)", color: "white", fontSize: 11 }}>{index === 0 ? "Ảnh đại diện" : `Ảnh ${index + 1}`}</span>
+                        <button type="button" aria-label="Xóa ảnh" disabled={isSubmitting} onClick={() => removeSelectedImage(image.id)} style={{ position: "absolute", top: 7, right: 7, width: 27, height: 27, border: 0, borderRadius: "50%", background: "rgba(15,23,42,.78)", color: "white", cursor: "pointer", fontSize: 17 }}>×</button>
                       </div>
-                    </div>
-                  )}
-
-                  {selectedPreset ? (
-                    <div style={{ textAlign: "center", padding: "16px" }}>
-                      <div style={{ fontSize: "64px", marginBottom: "8px" }}>{selectedPreset.icon}</div>
-                      <div style={{ fontWeight: "800", fontSize: "16px" }}>{selectedPreset.name}</div>
-                      <div style={{ fontSize: "12px", opacity: 0.85, marginTop: "4px" }}>
-                        {selectedPreset.brand} • Nhận diện hoàn tất
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ textAlign: "center", padding: "20px" }}>
-                      <div style={{ fontSize: "40px", marginBottom: "8px" }}>📷</div>
-                      <div style={{ fontWeight: "700", fontSize: "14px", color: "#334155" }}>
-                        Nhập thông tin thiết bị ở biểu mẫu bên cạnh
-                      </div>
-                      <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px" }}>
-                        Backend hiện chưa có API tải ảnh; bạn có thể đăng thông tin thiết bị bằng biểu mẫu.
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Kết quả phân tích AI */}
-                {aiConfidence && (
-                  <div
-                    className="aiResultAnim"
-                    style={{
-                      marginTop: "16px",
-                      background: "#f0fdf4",
-                      border: "1px solid #bbf7d0",
-                      borderRadius: "12px",
-                      padding: "14px",
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                      <span style={{ fontSize: "12px", fontWeight: "800", color: "#166534" }}>
-                        ĐỘ CHÍNH XÁC MÔ PHỎNG: {aiConfidence}%
-                      </span>
-                      <span style={{ fontSize: "11px", background: "#dcfce7", color: "#15803d", padding: "2px 8px", borderRadius: "9999px", fontWeight: "700" }}>
-                        Xác thực thị giác
-                      </span>
-                    </div>
-                    <div style={{ fontSize: "13px", color: "#14532d", lineHeight: "1.4" }}>
-                      AI đã tự động phân loại và điền thông số cho máy vào form bên cạnh. Bạn có thể kiểm tra lại trước khi đăng!
-                    </div>
+                    ))}
                   </div>
                 )}
-
-                {/* Chọn ảnh mẫu demo để AI quét ngay lập tức */}
-                <div style={{ marginTop: "18px" }}>
-                  <div style={{ fontSize: "12px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", marginBottom: "10px" }}>
-                    👉 Nhận diện AI chưa được kết nối với backend. Vui lòng nhập thông tin thiết bị thủ công.
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                    {samplePresets.map((preset) => {
-                      const isSelected = selectedPreset?.name === preset.name;
-                      return (
-                        <button
-                          key={preset.name}
-                          type="button"
-                          onClick={() => handleTriggerAIScan(preset)}
-                          disabled={isScanning}
-                          className="presetCardBtn"
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            padding: "10px 12px",
-                            borderRadius: "10px",
-                            border: isSelected ? "1.5px solid #059669" : "1px solid #e2e8f0",
-                            background: isSelected ? "#ecfdf5" : "#f8fafc",
-                            cursor: isScanning ? "not-allowed" : "pointer",
-                            textAlign: "left",
-                            transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                          }}
-                        >
-                          <span style={{ fontSize: "18px" }}>{preset.icon}</span>
-                          <div>
-                            <div style={{ fontSize: "12px", fontWeight: "700", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "120px" }}>
-                              {preset.name}
-                            </div>
-                            <div style={{ fontSize: "10px", color: "#059669", fontWeight: "600" }}>Quét AI ngay ⚡</div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                <div style={{ color: "#64748b", fontSize: "12px", marginTop: "12px" }}>{selectedImages.length}/6 ảnh đã chọn</div>
               </div>
             </div>
 
@@ -355,6 +238,7 @@ export default function PostItemPage() {
               <h3 style={{ fontSize: "18px", fontWeight: "800", color: "#0f172a", borderBottom: "1px solid #f1f5f9", paddingBottom: "12px" }}>
                 Thông Tin Chi Tiết Bài Đăng
               </h3>
+              {uploadProgress && <div role="status" style={{ color: "#047857", background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: 10, padding: 12, fontSize: 13 }}>{uploadProgress}</div>}
               {submitError && <div role="alert" style={{ color: "#b91c1c", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, padding: 12, fontSize: 13 }}>{submitError}</div>}
               <div>
                 <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>

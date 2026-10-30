@@ -64,6 +64,12 @@ export default function HomePage() {
           title: item.title || "Thiết bị chưa có tên",
           gradientBg: item.gradientBg || "linear-gradient(135deg, #334155 0%, #1e293b 100%)",
           deviceIcon: item.deviceIcon || "💻",
+          images: Array.isArray(item.images)
+            ? item.images
+                .map((image: any) => typeof image === "string" ? { url: image } : image)
+                .filter((image: any) => typeof image?.url === "string" && image.url.length > 0)
+                .sort((a: any, b: any) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0))
+            : [],
           categoryName: item.categoryName || item.category || "Thiết bị",
           type: item.type || (item.exchangeType === "even" ? "Đổi ngang" : "Bù trừ"),
           specs: Array.isArray(item.specs) ? item.specs : Object.entries(item.specs || {}).map(([k, v]) => `${k}: ${v}`),
@@ -333,7 +339,28 @@ export default function HomePage() {
           {filteredListings.map((item) => (
             <article key={item.id} className={styles.productCard}>
               {/* Phần hình ảnh & badge */}
-              <div className={styles.cardVisualBanner} style={{ background: item.gradientBg }}>
+              <div className={styles.cardVisualBanner} style={{ background: item.gradientBg, position: "relative", overflow: "hidden" }}>
+                {item.images && item.images.length > 0 ? (
+                  <>
+                    <img
+                      src={item.images[0].url}
+                      alt={`Ảnh ${item.title}`}
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                      onError={(event) => {
+                        event.currentTarget.style.display = "none";
+                      }}
+                    />
+                    {item.images.length > 1 && (
+                      <span style={{ position: "absolute", right: 12, bottom: 12, zIndex: 2, padding: "5px 9px", borderRadius: 20, color: "#fff", background: "rgba(15,23,42,.78)", fontSize: 12 }}>
+                        +{item.images.length - 1} ảnh
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <div className={styles.deviceIconPlaceholder}>{item.deviceIcon}</div>
+                )}
                 <span className={styles.typeBadge}>{item.categoryName}</span>
                 <span
                   className={`${styles.exchangeTypeBadge} ${
@@ -342,7 +369,6 @@ export default function HomePage() {
                 >
                   {item.type}
                 </span>
-                <div className={styles.deviceIconPlaceholder}>{item.deviceIcon}</div>
               </div>
 
               {/* Phần thân thẻ sản phẩm */}

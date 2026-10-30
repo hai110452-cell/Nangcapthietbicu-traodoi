@@ -129,3 +129,17 @@ Frontend hiện dùng kiểu dữ liệu localStorage/mock. Cần tạo một l�
 
 ## 8. Trạng thái triển khai
 Đây là bản backend khởi tạo đầy đủ module và schema để bắt đầu tích hợp. Chưa chạy được migration/build với database của bạn trong môi trường hiện tại, vì vậy cần chạy các lệnh trên máy bạn và kiểm thử API. Một số endpoint trả lỗi nghiệp vụ dưới dạng `{ "error": "..." }`; trước khi production nên chuẩn hóa các trường hợp này thành exception HTTP và bổ sung test tự động.
+
+
+## Upload ảnh lên Cloudinary
+
+1. Tạo tài khoản Cloudinary và lấy Cloud name, API Key, API Secret trong Dashboard.
+2. Điền `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` vào `.env` backend. Không đưa API Secret vào frontend hoặc biến `NEXT_PUBLIC_*`.
+3. Khởi động lại backend. Frontend gửi ảnh tới `POST /api/uploads/images` (JWT Bearer), mỗi ảnh tối đa 5 MB; hỗ trợ JPEG, PNG, WebP và AVIF. Ảnh được lưu trong folder `cep-exchange/listings` trên Cloudinary. URL trả về được gửi cùng tin đăng và lưu vào bảng `listing_images`.
+
+
+## Upload ảnh lên Cloudinary
+
+1. Tạo tài khoản Cloudinary và lấy Cloud name, API Key, API Secret trong Dashboard.
+2. Điền `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` vào `.env` backend. Không đưa API Secret vào frontend hoặc biến `NEXT_PUBLIC_*`.
+3. Khởi động lại backend. Frontend gửi ảnh tới `POST /api/uploads/images` (JWT Bearer), mỗi ảnh tối đa 5 MB; hỗ trợ JPEG, PNG, WebP và AVIF. Ảnh được lưu trong folder `cep-exchange/listings` trên Cloudinary. URL trả về được gửi cùng tin đăng và lưu vào bảng `listing_images`.
