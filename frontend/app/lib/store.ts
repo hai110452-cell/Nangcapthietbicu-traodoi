@@ -423,3 +423,251 @@ export const initialEcoRewards: EcoReward[] = [
     discountValue: "Giảm tối đa 100.000 đ",
   },
 ];
+
+// ============================================================================
+// HỆ THỐNG QUẢN LÝ TIN ĐĂNG CHỜ DUYỆT (PENDING POSTS) & AI MODERATION
+// ============================================================================
+
+export interface PendingPost {
+  id: string;
+  title: string;
+  category: string;
+  categoryType: "laptop" | "pc" | "iphone" | "android";
+  ownerName: string;
+  val: string;
+  valNumber: number;
+  demand: string;
+  specs: string[];
+  aiScore: number;
+  aiDetected: string;
+  aiReasons?: string[];
+  status: "pending" | "approved" | "rejected";
+  time: string;
+  gradientBg?: string;
+  deviceIcon?: string;
+  rejectionReason?: string;
+}
+
+export const initialPendingPosts: PendingPost[] = [
+  {
+    id: "post-801",
+    title: "MacBook Air M2 8GB/256GB Midnight Đẹp Keng",
+    category: "Laptop Apple",
+    categoryType: "laptop",
+    ownerName: "Hải Đăng",
+    val: "19.500.000 đ",
+    valNumber: 19500000,
+    demand: "Muốn đổi: iPad Pro M1 11 inch hoặc iPhone 14 Pro Max",
+    specs: ["Chip Apple M2", "RAM 8GB", "SSD 256GB", "Pin 93%", "Đẹp 99%"],
+    aiScore: 99.1,
+    aiDetected: "Xác thực đúng MacBook Air M2 (A2681), giá và thông số chuẩn",
+    status: "pending",
+    time: "10 phút trước",
+    gradientBg: "linear-gradient(135deg, #334155 0%, #1e293b 100%)",
+    deviceIcon: "💻",
+  },
+  {
+    id: "post-802",
+    title: "Case PC Gaming i7-12700K / RTX 3080 10GB Tản Nước",
+    category: "Máy tính bàn PC",
+    categoryType: "pc",
+    ownerName: "Bảo Long",
+    val: "23.000.000 đ",
+    valNumber: 23000000,
+    demand: "Muốn đổi: Laptop Gaming ASUS ROG hoặc Dell XPS 15",
+    specs: ["Core i7 12700K", "VGA RTX 3080 10GB", "RAM 32GB DDR4", "Tản AIO 360 RGB"],
+    aiScore: 97.4,
+    aiDetected: "Nhận diện VGA MSI RTX 3080 & Vỏ Corsair 4000D, cấu hình hợp lý",
+    status: "pending",
+    time: "35 phút trước",
+    gradientBg: "linear-gradient(135deg, #065f46 0%, #064e3b 100%)",
+    deviceIcon: "🖥️",
+  },
+  {
+    id: "post-803",
+    title: "iPhone 13 128GB Xanh Lá VN/A Pin 87%",
+    category: "Điện thoại iOS",
+    categoryType: "iphone",
+    ownerName: "Thùy Linh",
+    val: "11.200.000 đ",
+    valNumber: 11200000,
+    demand: "Muốn đổi: Laptop văn phòng mỏng nhẹ đời mới",
+    specs: ["Bản chính hãng VN/A", "Pin 87%", "Màn zin chưa ép kính", "Màu xanh rêu"],
+    aiScore: 98.8,
+    aiDetected: "Xác thực camera kép chéo, màn zin chưa ép kính",
+    status: "approved",
+    time: "2 giờ trước",
+    gradientBg: "linear-gradient(135deg, #166534 0%, #14532d 100%)",
+    deviceIcon: "📱",
+  },
+];
+
+const PENDING_STORAGE_KEY = "cep_pending_posts_v2";
+const AI_AUTOPILOT_KEY = "cep_ai_autopilot_enabled";
+
+export function getStoredPendingPosts(): PendingPost[] {
+  if (typeof window === "undefined") return initialPendingPosts;
+  try {
+    const raw = localStorage.getItem(PENDING_STORAGE_KEY);
+    if (!raw) {
+      localStorage.setItem(PENDING_STORAGE_KEY, JSON.stringify(initialPendingPosts));
+      return initialPendingPosts;
+    }
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : initialPendingPosts;
+  } catch (e) {
+    console.error("Error reading pending posts", e);
+    return initialPendingPosts;
+  }
+}
+
+export function saveStoredPendingPosts(posts: PendingPost[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(PENDING_STORAGE_KEY, JSON.stringify(posts));
+    window.dispatchEvent(new Event("cep_pending_updated"));
+  } catch (e) {
+    console.error("Error saving pending posts", e);
+  }
+}
+
+export function getAIAutoApprovalSetting(): boolean {
+  if (typeof window === "undefined") return true; // mặc định bật
+  try {
+    const raw = localStorage.getItem(AI_AUTOPILOT_KEY);
+    return raw !== null ? raw === "true" : true;
+  } catch (e) {
+    return true;
+  }
+}
+
+export function saveAIAutoApprovalSetting(enabled: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(AI_AUTOPILOT_KEY, String(enabled));
+    window.dispatchEvent(new Event("cep_ai_setting_updated"));
+  } catch (e) {
+    console.error("Error saving AI autopilot setting", e);
+  }
+}
+
+// Thêm bài đăng mới vào hàng đợi (hoặc duyệt tự động nếu điểm AI cao)
+export function submitNewListing(data: {
+  title: string;
+  category: "laptop" | "pc" | "iphone" | "android";
+  categoryName: string;
+  type: "Đổi ngang" | "Bù trừ";
+  specs: string[];
+  estimatedValue: string;
+  valNumber: number;
+  targetDemand: string;
+  location: string;
+  ownerName: string;
+  gradientBg: string;
+  deviceIcon: string;
+  aiScore: number;
+  aiSummary: string;
+  autoApprove?: boolean;
+}): { post: PendingPost; isAutoApproved: boolean } {
+  const currentPending = getStoredPendingPosts();
+  const autoPilotOn = getAIAutoApprovalSetting();
+  const isAutoApproved = !!(data.autoApprove || (autoPilotOn && data.aiScore >= 88));
+
+  const newPost: PendingPost = {
+    id: `post-${Date.now()}`,
+    title: data.title,
+    category: data.categoryName,
+    categoryType: data.category,
+    ownerName: data.ownerName,
+    val: data.estimatedValue,
+    valNumber: data.valNumber,
+    demand: data.targetDemand,
+    specs: data.specs,
+    aiScore: data.aiScore,
+    aiDetected: data.aiSummary,
+    status: isAutoApproved ? "approved" : "pending",
+    time: "Vừa xong",
+    gradientBg: data.gradientBg,
+    deviceIcon: data.deviceIcon,
+  };
+
+  saveStoredPendingPosts([newPost, ...currentPending]);
+
+  // Nếu được tự động duyệt, đẩy ngay vào listings sàn chính
+  if (isAutoApproved) {
+    const currentListings = getStoredListings();
+    const newExchangeItem: ExchangeItem = {
+      id: `ex-${Date.now()}`,
+      category: data.category,
+      title: data.title,
+      gradientBg: data.gradientBg,
+      deviceIcon: data.deviceIcon,
+      categoryName: data.categoryName,
+      type: data.type,
+      specs: data.specs,
+      estimatedValue: data.estimatedValue,
+      valNumber: data.valNumber,
+      targetDemand: data.targetDemand,
+      location: data.location,
+      ownerName: data.ownerName,
+      rating: 5.0,
+      dealCount: 1,
+      reviewCount: 0,
+    };
+    saveStoredListings([newExchangeItem, ...currentListings]);
+  }
+
+  return { post: newPost, isAutoApproved };
+}
+
+// Duyệt bài đăng thủ công hoặc hàng loạt từ Admin
+export function approvePendingPostById(postId: string): boolean {
+  const pending = getStoredPendingPosts();
+  const target = pending.find((p) => p.id === postId);
+  if (!target) return false;
+
+  const updatedPending = pending.map((p) =>
+    p.id === postId ? { ...p, status: "approved" as const } : p
+  );
+  saveStoredPendingPosts(updatedPending);
+
+  // Thêm vào danh sách sản phẩm hiển thị nếu chưa có
+  const listings = getStoredListings();
+  const alreadyInListings = listings.some((l) => l.title === target.title);
+  if (!alreadyInListings) {
+    const newItem: ExchangeItem = {
+      id: `ex-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      category: target.categoryType || "laptop",
+      title: target.title,
+      gradientBg: target.gradientBg || "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
+      deviceIcon: target.deviceIcon || "💻",
+      categoryName: target.category,
+      type: "Bù trừ",
+      specs: target.specs || ["Chính hãng nguyên bản", "Chưa qua sửa chữa", "Hoạt động hoàn hảo"],
+      estimatedValue: target.val,
+      valNumber: target.valNumber || 15000000,
+      targetDemand: target.demand,
+      location: "TP. Hồ Chí Minh",
+      ownerName: target.ownerName,
+      rating: 5.0,
+      dealCount: 1,
+      reviewCount: 0,
+    };
+    saveStoredListings([newItem, ...listings]);
+  }
+
+  return true;
+}
+
+// Từ chối bài đăng
+export function rejectPendingPostById(postId: string, reason?: string): boolean {
+  const pending = getStoredPendingPosts();
+  const updated = pending.map((p) =>
+    p.id === postId
+      ? { ...p, status: "rejected" as const, rejectionReason: reason || "Nội dung chưa đạt tiêu chuẩn kiểm duyệt của sàn." }
+      : p
+  );
+  saveStoredPendingPosts(updated);
+  return true;
+}
+

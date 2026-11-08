@@ -9,6 +9,7 @@ import {
   WebsiteConfig,
   UserProfile,
   UserRole,
+  PendingPost,
   defaultWebsiteConfig,
   getStoredConfig,
   saveStoredConfig,
@@ -16,61 +17,17 @@ import {
   saveStoredListings,
   getStoredRole,
   saveStoredRole,
+  getStoredPendingPosts,
+  saveStoredPendingPosts,
+  approvePendingPostById,
+  rejectPendingPostById,
+  getAIAutoApprovalSetting,
+  saveAIAutoApprovalSetting,
+  submitNewListing,
   initialUsers,
 } from "../lib/store";
 import { ProductReview } from "../components/ProductReviewModal";
-
-interface PendingPost {
-  id: string;
-  title: string;
-  category: string;
-  ownerName: string;
-  val: string;
-  demand: string;
-  aiScore: number;
-  aiDetected: string;
-  status: "pending" | "approved" | "rejected";
-  time: string;
-}
-
-const initialPendingPosts: PendingPost[] = [
-  {
-    id: "post-801",
-    title: "MacBook Air M2 8GB/256GB Midnight Đẹp Keng",
-    category: "Laptop Apple",
-    ownerName: "Hải Đăng",
-    val: "19.500.000 đ",
-    demand: "Muốn đổi: iPad Pro M1 11 inch hoặc iPhone 14 Pro Max",
-    aiScore: 99.1,
-    aiDetected: "Xác thực đúng MacBook Air M2 (A2681), không trầy xước",
-    status: "pending",
-    time: "10 phút trước",
-  },
-  {
-    id: "post-802",
-    title: "Case PC Gaming i7-12700K / RTX 3080 10GB Tản Nước",
-    category: "PC Gaming",
-    ownerName: "Bảo Long",
-    val: "23.000.000 đ",
-    demand: "Muốn đổi: Laptop Gaming ASUS ROG hoặc Dell XPS 15",
-    aiScore: 97.4,
-    aiDetected: "Nhận diện VGA MSI RTX 3080 & Vỏ Corsair 4000D",
-    status: "pending",
-    time: "35 phút trước",
-  },
-  {
-    id: "post-803",
-    title: "iPhone 13 128GB Xanh Lá VN/A Pin 87%",
-    category: "Điện thoại iOS",
-    ownerName: "Thùy Linh",
-    val: "11.200.000 đ",
-    demand: "Muốn đổi: Laptop văn phòng mỏng nhẹ đời mới",
-    aiScore: 98.8,
-    aiDetected: "Xác thực camera kép chéo, màn zin chưa ép kính",
-    status: "approved",
-    time: "2 giờ trước",
-  },
-];
+import { generateAIPost, moderatePostWithAI, AIModerationResult } from "../lib/ai-service";
 
 export default function AdminPage() {
   const [currentRole, setCurrentRole] = useState<UserRole>("admin");
@@ -111,20 +68,42 @@ export default function AdminPage() {
   const [editingReview, setEditingReview] = useState<{ productId: string; review: ProductReview } | null>(null);
   const [editReviewText, setEditReviewText] = useState("");
 
-  // State Bài đăng chờ duyệt & Người dùng
-  const [pendingPosts, setPendingPosts] = useState<PendingPost[]>(initialPendingPosts);
+  // State Bài đăng chờ duyệt & Người dùng & AI Engine
+  const [pendingPosts, setPendingPosts] = useState<PendingPost[]>([]);
   const [users, setUsers] = useState<UserProfile[]>(initialUsers);
+  const [aiAutoPilot, setAiAutoPilot] = useState<boolean>(true);
+
+  // State Modal AI Tự Tạo Bài Đăng & Modal Thẩm Định AI
+  const [isAIGeneratorModalOpen, setIsAIGeneratorModalOpen] = useState(false);
+  const [aiGenPrompt, setAiGenPrompt] = useState("");
+  const [isGeneratingPost, setIsGeneratingPost] = useState(false);
+  const [selectedAuditPost, setSelectedAuditPost] = useState<PendingPost | null>(null);
 
   // Load toàn bộ dữ liệu khi mount
   useEffect(() => {
     setCurrentRole(getStoredRole());
     setListings(getStoredListings());
+    setPendingPosts(getStoredPendingPosts());
+    setAiAutoPilot(getAIAutoApprovalSetting());
     setSiteConfig(getStoredConfig());
     loadAllReviews(getStoredListings());
 
     const handleRoleUpdate = () => setCurrentRole(getStoredRole());
+    const handlePendingUpdate = () => setPendingPosts(getStoredPendingPosts());
+    const handleListingsUpdate = () => setListings(getStoredListings());
+    const handleAISettingUpdate = () => setAiAutoPilot(getAIAutoApprovalSetting());
+
     window.addEventListener("cep_role_updated", handleRoleUpdate);
-    return () => window.removeEventListener("cep_role_updated", handleRoleUpdate);
+    window.addEventListener("cep_pending_updated", handlePendingUpdate);
+    window.addEventListener("cep_listings_updated", handleListingsUpdate);
+    window.addEventListener("cep_ai_setting_updated", handleAISettingUpdate);
+
+    return () => {
+      window.removeEventListener("cep_role_updated", handleRoleUpdate);
+      window.removeEventListener("cep_pending_updated", handlePendingUpdate);
+      window.removeEventListener("cep_listings_updated", handleListingsUpdate);
+      window.removeEventListener("cep_ai_setting_updated", handleAISettingUpdate);
+    };
   }, []);
 
   // Đọc toàn bộ bình luận từ localStorage của từng sản phẩm
@@ -329,15 +308,84 @@ export default function AdminPage() {
     }
   };
 
-  // --- QUẢN LÝ BÀI ĐĂNG CHỜ & USER ---
+  // --- QUẢN LÝ BÀI ĐĂNG CHỜ, AI MODERATION & AUTO-PILOT ---
   const handleApprovePost = (postId: string) => {
-    setPendingPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, status: "approved" } : p)));
-    alert("Đã duyệt tin đăng!");
+    approvePendingPostById(postId);
+    setPendingPosts(getStoredPendingPosts());
+    setListings(getStoredListings());
+    alert("✅ Đã duyệt bài đăng và xuất bản trực tiếp lên sàn giao dịch!");
   };
 
   const handleRejectPost = (postId: string) => {
-    setPendingPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, status: "rejected" } : p)));
-    alert("Đã từ chối tin đăng!");
+    const reason = prompt("Nhập lý do từ chối bài đăng (tùy chọn):", "Thông tin sản phẩm chưa rõ ràng hoặc định giá chưa hợp lý");
+    if (reason !== null) {
+      rejectPendingPostById(postId, reason);
+      setPendingPosts(getStoredPendingPosts());
+      alert("Đã từ chối bài đăng!");
+    }
+  };
+
+  // AI Tự động duyệt hàng loạt tất cả các bài có điểm AI an toàn >= 88%
+  const handleAIMassModerate = () => {
+    const list = getStoredPendingPosts();
+    let count = 0;
+    list.forEach((p) => {
+      if (p.status === "pending" && p.aiScore >= 88) {
+        approvePendingPostById(p.id);
+        count++;
+      }
+    });
+    setPendingPosts(getStoredPendingPosts());
+    setListings(getStoredListings());
+    if (count > 0) {
+      alert(`🤖 AI đã tự động xét duyệt và xuất bản ${count} bài đăng an toàn lên sàn giao dịch!`);
+    } else {
+      alert("Không có bài đăng chờ nào đủ điều kiện tự động duyệt (Điểm AI ≥ 88%).");
+    }
+  };
+
+  // Bật / Tắt chế độ AI Auto-Pilot 24/7
+  const handleToggleAutoPilot = () => {
+    const nextVal = !aiAutoPilot;
+    setAiAutoPilot(nextVal);
+    saveAIAutoApprovalSetting(nextVal);
+  };
+
+  // Admin kích hoạt AI tạo bài đăng mẫu chuẩn thị trường
+  const handleAdminAIGeneratePost = async (customPrompt?: string) => {
+    const text = customPrompt || aiGenPrompt;
+    if (!text.trim()) return;
+    setIsGeneratingPost(true);
+    try {
+      const generated = await generateAIPost(text);
+      submitNewListing({
+        title: generated.title,
+        category: generated.category,
+        categoryName: generated.categoryName,
+        type: generated.type,
+        specs: generated.specs,
+        estimatedValue: generated.estimatedValue,
+        valNumber: generated.valNumber,
+        targetDemand: generated.targetDemand,
+        location: "Quận 1, TP. Hồ Chí Minh",
+        ownerName: "Ban Quản Trị CEP",
+        gradientBg: generated.gradientBg,
+        deviceIcon: generated.deviceIcon,
+        aiScore: 99.8,
+        aiSummary: "Tạo tự động bởi AI Engine theo chuẩn thị trường",
+        autoApprove: true,
+      });
+      setListings(getStoredListings());
+      setPendingPosts(getStoredPendingPosts());
+      setIsAIGeneratorModalOpen(false);
+      setAiGenPrompt("");
+      alert(`🎉 AI đã tạo và xuất bản thành công bài đăng "${generated.title}" lên sàn giao dịch!`);
+    } catch (err) {
+      console.error(err);
+      alert("Đã xảy ra lỗi khi tạo bài bằng AI.");
+    } finally {
+      setIsGeneratingPost(false);
+    }
   };
 
   const handleToggleUserRole = (userId: string) => {
@@ -1134,69 +1182,462 @@ export default function AdminPage() {
         )}
 
         {/* ========================================================
-            TAB 4: DUYỆT BÀI ĐĂNG CHỜ (PENDING POSTS)
+            TAB 4: DUYỆT BÀI ĐĂNG CHỜ (PENDING POSTS) & AI MODERATION
             ======================================================== */}
         {activeTab === "pending_posts" && (
-          <div style={{ background: "#ffffff", borderRadius: "20px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-              <thead>
-                <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", fontSize: "12.5px", color: "#64748b" }}>
-                  <th style={{ padding: "16px 20px" }}>Bài đăng & Người gửi</th>
-                  <th style={{ padding: "16px 20px" }}>Danh mục</th>
-                  <th style={{ padding: "16px 20px" }}>Định giá</th>
-                  <th style={{ padding: "16px 20px" }}>Độ tin cậy AI</th>
-                  <th style={{ padding: "16px 20px" }}>Trạng thái</th>
-                  <th style={{ padding: "16px 20px", textAlign: "right" }}>Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pendingPosts.map((post) => (
-                  <tr key={post.id} style={{ borderBottom: "1px solid #f1f5f9", fontSize: "13.5px" }}>
-                    <td style={{ padding: "16px 20px" }}>
-                      <strong>{post.title}</strong>
-                      <div style={{ fontSize: "11px", color: "#64748b" }}>Gửi bởi: {post.ownerName} • {post.time}</div>
-                    </td>
-                    <td style={{ padding: "16px 20px" }}>{post.category}</td>
-                    <td style={{ padding: "16px 20px", fontWeight: "700", color: "#047857" }}>{post.val}</td>
-                    <td style={{ padding: "16px 20px" }}>
-                      <span style={{ color: post.aiScore >= 95 ? "#059669" : "#eab308", fontWeight: "700" }}>
-                        {post.aiScore}%
-                      </span>
-                    </td>
-                    <td style={{ padding: "16px 20px" }}>
-                      <span
-                        style={{
-                          fontSize: "11px",
-                          fontWeight: "700",
-                          padding: "3px 8px",
-                          borderRadius: "6px",
-                          background: post.status === "approved" ? "#dcfce7" : post.status === "rejected" ? "#fee2e2" : "#fef9c3",
-                          color: post.status === "approved" ? "#166534" : post.status === "rejected" ? "#991b1b" : "#854d0e",
-                        }}
-                      >
-                        {post.status === "approved" ? "Đã duyệt" : post.status === "rejected" ? "Từ chối" : "Chờ duyệt"}
-                      </span>
-                    </td>
-                    <td style={{ padding: "16px 20px", textAlign: "right" }}>
-                      <div style={{ display: "inline-flex", gap: "8px" }}>
-                        <button
-                          onClick={() => handleApprovePost(post.id)}
-                          style={{ background: "#059669", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "8px", fontSize: "12px", fontWeight: "700", cursor: "pointer" }}
-                        >
-                          Duyệt
-                        </button>
-                        <button
-                          onClick={() => handleRejectPost(post.id)}
-                          style={{ background: "#ef4444", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "8px", fontSize: "12px", fontWeight: "700", cursor: "pointer" }}
-                        >
-                          Từ chối
-                        </button>
-                      </div>
-                    </td>
+          <div>
+            {/* Thanh điều khiển AI Auto-Pilot & Công cụ duyệt */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%)",
+                borderRadius: "20px",
+                padding: "24px 28px",
+                color: "#ffffff",
+                marginBottom: "24px",
+                boxShadow: "0 10px 30px rgba(6, 95, 70, 0.2)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "16px",
+              }}
+            >
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+                  <span style={{ fontSize: "24px" }}>🤖</span>
+                  <h3 style={{ fontSize: "18px", fontWeight: "800", margin: 0 }}>
+                    Trung Tâm Kiểm Duyệt AI (AI Moderation & Auto-Pilot)
+                  </h3>
+                  <span
+                    style={{
+                      background: aiAutoPilot ? "#10b981" : "rgba(255,255,255,0.2)",
+                      color: "#fff",
+                      fontSize: "11px",
+                      fontWeight: "800",
+                      padding: "3px 10px",
+                      borderRadius: "999px",
+                    }}
+                  >
+                    {aiAutoPilot ? "● AUTO-PILOT ĐANG BẬT" : "○ AUTO-PILOT ĐÃ TẮT"}
+                  </span>
+                </div>
+                <p style={{ margin: 0, fontSize: "13px", opacity: 0.9, maxWidth: "620px" }}>
+                  Khi bật Auto-Pilot, AI sẽ tự động phân tích và xuất bản các bài đăng có điểm an toàn ≥ 88%. Các bài nghi vấn hoặc chứa từ khóa lạ sẽ được giữ lại cho Admin xem xét.
+                </p>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+                {/* Nút bật tắt Auto-Pilot */}
+                <button
+                  type="button"
+                  onClick={handleToggleAutoPilot}
+                  style={{
+                    background: aiAutoPilot ? "#10b981" : "rgba(255,255,255,0.15)",
+                    color: "#ffffff",
+                    border: "1px solid rgba(255,255,255,0.3)",
+                    padding: "9px 16px",
+                    borderRadius: "10px",
+                    fontSize: "13px",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  <span>⚡</span> Auto-Pilot: {aiAutoPilot ? "Bật" : "Tắt"}
+                </button>
+
+                {/* Nút AI duyệt hàng loạt */}
+                <button
+                  type="button"
+                  onClick={handleAIMassModerate}
+                  style={{
+                    background: "#ffffff",
+                    color: "#065f46",
+                    border: "none",
+                    padding: "9px 18px",
+                    borderRadius: "10px",
+                    fontSize: "13px",
+                    fontWeight: "800",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                  }}
+                >
+                  <span>✨</span> AI Duyệt Hàng Loạt
+                </button>
+
+                {/* Nút AI tự tạo bài mẫu */}
+                <button
+                  type="button"
+                  onClick={() => setIsAIGeneratorModalOpen(true)}
+                  style={{
+                    background: "rgba(255, 255, 255, 0.2)",
+                    color: "#ffffff",
+                    border: "1px solid rgba(255, 255, 255, 0.4)",
+                    padding: "9px 18px",
+                    borderRadius: "10px",
+                    fontSize: "13px",
+                    fontWeight: "800",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  <span>✍️</span> AI Tự Đăng Bài Mẫu
+                </button>
+              </div>
+            </div>
+
+            {/* Bảng danh sách bài đăng chờ duyệt */}
+            <div style={{ background: "#ffffff", borderRadius: "20px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                <thead>
+                  <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", fontSize: "12.5px", color: "#64748b" }}>
+                    <th style={{ padding: "16px 20px" }}>Bài đăng & Người gửi</th>
+                    <th style={{ padding: "16px 20px" }}>Danh mục</th>
+                    <th style={{ padding: "16px 20px" }}>Định giá</th>
+                    <th style={{ padding: "16px 20px" }}>Độ tin cậy AI</th>
+                    <th style={{ padding: "16px 20px" }}>Trạng thái</th>
+                    <th style={{ padding: "16px 20px", textAlign: "right" }}>Thao tác</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {pendingPosts.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
+                        🎉 Hiện không có bài đăng nào cần duyệt.
+                      </td>
+                    </tr>
+                  ) : (
+                    pendingPosts.map((post) => (
+                      <tr key={post.id} style={{ borderBottom: "1px solid #f1f5f9", fontSize: "13.5px" }}>
+                        <td style={{ padding: "16px 20px" }}>
+                          <div style={{ fontWeight: "700", color: "#0f172a" }}>{post.title}</div>
+                          <div style={{ fontSize: "11.5px", color: "#64748b", marginTop: "3px" }}>
+                            Gửi bởi: <strong>{post.ownerName}</strong> • {post.time}
+                          </div>
+                          {post.demand && (
+                            <div style={{ fontSize: "11px", color: "#059669", marginTop: "2px" }}>
+                              ⇄ {post.demand}
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ padding: "16px 20px" }}>
+                          <span style={{ background: "#f1f5f9", padding: "4px 8px", borderRadius: "6px", fontSize: "12px" }}>
+                            {post.category}
+                          </span>
+                        </td>
+                        <td style={{ padding: "16px 20px", fontWeight: "700", color: "#047857" }}>{post.val}</td>
+                        <td style={{ padding: "16px 20px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span
+                              style={{
+                                color: post.aiScore >= 88 ? "#059669" : post.aiScore >= 60 ? "#d97706" : "#dc2626",
+                                fontWeight: "800",
+                                fontSize: "13.5px",
+                              }}
+                            >
+                              {post.aiScore}%
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedAuditPost(post)}
+                              style={{
+                                background: "#f1f5f9",
+                                border: "1px solid #cbd5e1",
+                                color: "#334155",
+                                padding: "2px 8px",
+                                borderRadius: "6px",
+                                fontSize: "11px",
+                                fontWeight: "700",
+                                cursor: "pointer",
+                              }}
+                            >
+                              🔍 Chi tiết
+                            </button>
+                          </div>
+                          <div style={{ fontSize: "10.5px", color: "#64748b", marginTop: "2px", maxWidth: "220px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {post.aiDetected}
+                          </div>
+                        </td>
+                        <td style={{ padding: "16px 20px" }}>
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              fontWeight: "700",
+                              padding: "3px 8px",
+                              borderRadius: "6px",
+                              background: post.status === "approved" ? "#dcfce7" : post.status === "rejected" ? "#fee2e2" : "#fef9c3",
+                              color: post.status === "approved" ? "#166534" : post.status === "rejected" ? "#991b1b" : "#854d0e",
+                            }}
+                          >
+                            {post.status === "approved" ? "Đã duyệt" : post.status === "rejected" ? "Từ chối" : "Chờ duyệt"}
+                          </span>
+                        </td>
+                        <td style={{ padding: "16px 20px", textAlign: "right" }}>
+                          <div style={{ display: "inline-flex", gap: "8px" }}>
+                            {post.status !== "approved" && (
+                              <button
+                                onClick={() => handleApprovePost(post.id)}
+                                style={{ background: "#059669", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "8px", fontSize: "12px", fontWeight: "700", cursor: "pointer" }}
+                              >
+                                Duyệt
+                              </button>
+                            )}
+                            {post.status !== "rejected" && (
+                              <button
+                                onClick={() => handleRejectPost(post.id)}
+                                style={{ background: "#ef4444", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "8px", fontSize: "12px", fontWeight: "700", cursor: "pointer" }}
+                              >
+                                Từ chối
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* MODAL 1: BÁO CÁO THẨM ĐỊNH CHI TIẾT CỦA AI */}
+            {selectedAuditPost && (
+              <div
+                style={{
+                  position: "fixed",
+                  inset: 0,
+                  background: "rgba(15, 23, 42, 0.65)",
+                  backdropFilter: "blur(4px)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  zIndex: 9999,
+                  padding: "20px",
+                }}
+              >
+                <div
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: "20px",
+                    maxWidth: "580px",
+                    width: "100%",
+                    padding: "28px",
+                    boxShadow: "0 25px 60px rgba(0,0,0,0.25)",
+                    border: "1px solid #e2e8f0",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "24px" }}>🛡️</span>
+                      <h3 style={{ fontSize: "17px", fontWeight: "800", color: "#0f172a", margin: 0 }}>
+                        Báo Cáo Phân Tích An Toàn AI
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedAuditPost(null)}
+                      style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#64748b" }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "12px", marginBottom: "16px" }}>
+                    <div style={{ fontWeight: "700", fontSize: "15px", color: "#0f172a" }}>{selectedAuditPost.title}</div>
+                    <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>
+                      Người đăng: {selectedAuditPost.ownerName} • Định giá: <strong style={{ color: "#059669" }}>{selectedAuditPost.val}</strong>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderRadius: "12px", background: selectedAuditPost.aiScore >= 88 ? "#ecfdf5" : "#fefce8", border: selectedAuditPost.aiScore >= 88 ? "1px solid #a7f3d0" : "1px solid #fde047", marginBottom: "16px" }}>
+                    <span style={{ fontSize: "13px", fontWeight: "700", color: selectedAuditPost.aiScore >= 88 ? "#065f46" : "#854d0e" }}>
+                      {selectedAuditPost.aiScore >= 88 ? "✅ Đủ điều kiện duyệt tự động" : "⚠️ Cần kiểm tra bổ sung"}
+                    </span>
+                    <span style={{ fontSize: "16px", fontWeight: "900", color: selectedAuditPost.aiScore >= 88 ? "#059669" : "#d97706" }}>
+                      {selectedAuditPost.aiScore}% Tin cậy
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: "13px", color: "#334155", lineHeight: "1.6", marginBottom: "18px" }}>
+                    <strong>Đánh giá của hệ thống AI:</strong>
+                    <div style={{ background: "#f1f5f9", padding: "10px 14px", borderRadius: "8px", marginTop: "6px", fontStyle: "italic" }}>
+                      &ldquo;{selectedAuditPost.aiDetected}&rdquo;
+                    </div>
+                  </div>
+
+                  {selectedAuditPost.specs && selectedAuditPost.specs.length > 0 && (
+                    <div style={{ marginBottom: "20px" }}>
+                      <strong style={{ fontSize: "12.5px", color: "#475569" }}>Thông số kỹ thuật nhận diện:</strong>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "6px" }}>
+                        {selectedAuditPost.specs.map((s, idx) => (
+                          <span key={idx} style={{ background: "#f1f5f9", padding: "4px 8px", borderRadius: "6px", fontSize: "11.5px", color: "#334155" }}>
+                            • {s}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedAuditPost(null)}
+                      style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", padding: "8px 16px", borderRadius: "10px", fontWeight: "700", fontSize: "13px", cursor: "pointer" }}
+                    >
+                      Đóng
+                    </button>
+                    {selectedAuditPost.status !== "approved" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleApprovePost(selectedAuditPost.id);
+                          setSelectedAuditPost(null);
+                        }}
+                        style={{ background: "#059669", color: "#fff", border: "none", padding: "8px 18px", borderRadius: "10px", fontWeight: "700", fontSize: "13px", cursor: "pointer" }}
+                      >
+                        Duyệt ngay
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* MODAL 2: AI TỰ ĐỘNG TẠO & ĐĂNG BÀI MẪU CHO ADMIN */}
+            {isAIGeneratorModalOpen && (
+              <div
+                style={{
+                  position: "fixed",
+                  inset: 0,
+                  background: "rgba(15, 23, 42, 0.65)",
+                  backdropFilter: "blur(4px)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  zIndex: 9999,
+                  padding: "20px",
+                }}
+              >
+                <div
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: "20px",
+                    maxWidth: "600px",
+                    width: "100%",
+                    padding: "28px",
+                    boxShadow: "0 25px 60px rgba(0,0,0,0.25)",
+                    border: "1px solid #e2e8f0",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "24px" }}>✍️</span>
+                      <h3 style={{ fontSize: "18px", fontWeight: "800", color: "#0f172a", margin: 0 }}>
+                        AI Tự Động Tạo & Xuất Bản Bài Đăng
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsAIGeneratorModalOpen(false)}
+                      style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#64748b" }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <p style={{ fontSize: "13.5px", color: "#64748b", margin: "0 0 16px" }}>
+                    Nhập dòng thiết bị công nghệ bạn muốn đăng, AI sẽ tự động sinh tiêu đề, thông số chuẩn hãng, định giá và đăng thẳng lên sàn giao dịch!
+                  </p>
+
+                  <div style={{ marginBottom: "14px" }}>
+                    <input
+                      type="text"
+                      placeholder="VD: MacBook Air M2 16GB, iPhone 15 Pro Max 256GB Titan, PC Gaming RTX 3060..."
+                      value={aiGenPrompt}
+                      onChange={(e) => setAiGenPrompt(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "12px 14px",
+                        borderRadius: "10px",
+                        border: "1.5px solid #cbd5e1",
+                        fontSize: "14px",
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: "20px" }}>
+                    <div style={{ fontSize: "12px", fontWeight: "700", color: "#64748b", marginBottom: "8px" }}>
+                      Hoặc chọn nhanh mẫu thiết bị hot:
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                      {[
+                        "MacBook Pro 14 M2 Pro 16GB",
+                        "iPhone 15 Pro Max 256GB",
+                        "PC Gaming i5-13400F RTX 3060Ti",
+                        "Samsung Galaxy S24 Ultra",
+                        "Dell XPS 13 Plus OLED",
+                      ].map((item) => (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => {
+                            setAiGenPrompt(item);
+                            handleAdminAIGeneratePost(item);
+                          }}
+                          disabled={isGeneratingPost}
+                          style={{
+                            background: "#f1f5f9",
+                            border: "1px solid #e2e8f0",
+                            padding: "6px 12px",
+                            borderRadius: "8px",
+                            fontSize: "12px",
+                            fontWeight: "600",
+                            color: "#0f172a",
+                            cursor: "pointer",
+                          }}
+                        >
+                          + {item}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                    <button
+                      type="button"
+                      onClick={() => setIsAIGeneratorModalOpen(false)}
+                      style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", padding: "10px 18px", borderRadius: "10px", fontWeight: "700", fontSize: "13px", cursor: "pointer" }}
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAdminAIGeneratePost()}
+                      disabled={isGeneratingPost}
+                      style={{
+                        background: "linear-gradient(135deg, #10b981, #059669)",
+                        color: "#fff",
+                        border: "none",
+                        padding: "10px 22px",
+                        borderRadius: "10px",
+                        fontWeight: "800",
+                        fontSize: "13px",
+                        cursor: isGeneratingPost ? "wait" : "pointer",
+                      }}
+                    >
+                      {isGeneratingPost ? "🤖 Đang khởi tạo..." : "🚀 Tạo & Đăng Lên Sàn Ngay"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

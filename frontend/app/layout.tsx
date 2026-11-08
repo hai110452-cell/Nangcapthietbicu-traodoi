@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi" className={plusJakartaSans.variable}>
+    <html lang="vi" data-scroll-behavior="smooth" className={plusJakartaSans.variable}>
       <body className={plusJakartaSans.className}>{children}</body>
     </html>
   );

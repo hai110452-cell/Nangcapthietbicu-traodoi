@@ -23,10 +23,16 @@ import {
   getStoredListings,
   initialExchangeListings,
 } from "./lib/store";
+import { searchWithAI, AISearchResult } from "./lib/ai-service";
 
 export default function HomePage() {
   const [listings, setListings] = useState<ExchangeItem[]>(initialExchangeListings);
   const [siteConfig, setSiteConfig] = useState<WebsiteConfig>(defaultWebsiteConfig);
+
+  // Trạng thái Tìm kiếm & Tư vấn bằng AI
+  const [aiSearchQuery, setAiSearchQuery] = useState<string>("");
+  const [isAISearching, setIsAISearching] = useState<boolean>(false);
+  const [aiSearchResult, setAiSearchResult] = useState<AISearchResult | null>(null);
 
   // Trạng thái bộ lọc danh mục
   const [activeCategory, setActiveCategory] = useState<string>("all");
@@ -98,20 +104,59 @@ export default function HomePage() {
     }
   };
 
-  // Lọc sản phẩm
-  const filteredListings = listings.filter((item) => {
-    if (activeCategory !== "all" && item.category !== activeCategory) {
-      return false;
+  // Xử lý Tìm Kiếm Thông Minh Bằng AI
+  const handleAISearch = async (customQuery?: string) => {
+    const q = customQuery !== undefined ? customQuery : aiSearchQuery;
+    if (!q.trim()) {
+      setAiSearchResult(null);
+      return;
     }
-    if (searchHave && !item.targetDemand.toLowerCase().includes(searchHave.toLowerCase())) {
-      // nếu người dùng nhập máy họ có, tìm xem có tin nào muốn đổi máy đó không
-      return false;
+    setIsAISearching(true);
+    try {
+      const result = await searchWithAI(q, listings);
+      setAiSearchResult(result);
+      const el = document.getElementById("listings");
+      el?.scrollIntoView({ behavior: "smooth" });
+    } catch (err) {
+      console.error("Lỗi tìm kiếm AI:", err);
+    } finally {
+      setIsAISearching(false);
     }
-    if (searchWant && !item.title.toLowerCase().includes(searchWant.toLowerCase())) {
-      return false;
-    }
-    return true;
-  });
+  };
+
+  const handleClearAISearch = () => {
+    setAiSearchResult(null);
+    setAiSearchQuery("");
+  };
+
+  // Danh sách hiển thị: Nếu có AI Search thì ưu tiên kết quả AI, nếu không thì theo bộ lọc thông thường
+  const displayListings: {
+    item: ExchangeItem;
+    matchScore?: number;
+    matchReason?: string;
+    highlightSpecs?: string[];
+  }[] =
+    aiSearchResult && aiSearchResult.matches.length > 0
+      ? aiSearchResult.matches.map((m) => ({
+          item: m.item,
+          matchScore: m.matchScore,
+          matchReason: m.matchReason,
+          highlightSpecs: m.highlightSpecs,
+        }))
+      : listings
+          .filter((item) => {
+            if (activeCategory !== "all" && item.category !== activeCategory) {
+              return false;
+            }
+            if (searchHave && !item.targetDemand.toLowerCase().includes(searchHave.toLowerCase())) {
+              return false;
+            }
+            if (searchWant && !item.title.toLowerCase().includes(searchWant.toLowerCase())) {
+              return false;
+            }
+            return true;
+          })
+          .map((item) => ({ item }));
 
   const handleSwapInputs = () => {
     const temp = searchHave;
@@ -244,6 +289,115 @@ export default function HomePage() {
             </button>
           </div>
 
+          {/* ========================================================
+              THANH TÌM KIẾM & TƯ VẤN SẢN PHẨM BẰNG AI (AI SMART SEARCH)
+              ======================================================== */}
+          <div
+            style={{
+              background: "linear-gradient(135deg, rgba(6, 78, 59, 0.96), rgba(6, 95, 70, 0.96))",
+              border: "1.5px solid rgba(52, 211, 153, 0.4)",
+              borderRadius: "20px",
+              padding: "20px 24px",
+              maxWidth: "860px",
+              margin: "24px auto 0",
+              boxShadow: "0 15px 35px rgba(0, 0, 0, 0.25)",
+              backdropFilter: "blur(12px)",
+              textAlign: "left",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "22px" }}>🤖</span>
+                <span style={{ fontWeight: "800", fontSize: "15px", color: "#ffffff" }}>
+                  Trợ Lý AI Tìm Kiếm & Tư Vấn Đổi Máy Thông Minh
+                </span>
+              </div>
+              <span style={{ background: "rgba(16, 185, 129, 0.3)", color: "#a7f3d0", fontSize: "11px", fontWeight: "700", padding: "3px 10px", borderRadius: "999px", border: "1px solid rgba(52, 211, 153, 0.3)" }}>
+                ⚡ Semantic Search & Matching
+              </span>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <input
+                type="text"
+                placeholder="Hỏi AI bất kỳ điều gì (VD: &quot;Tìm laptop mỏng nhẹ pin trâu dưới 20 triệu&quot;, &quot;Máy nào đổi ngang iPhone 14&quot;...)"
+                value={aiSearchQuery}
+                onChange={(e) => setAiSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAISearch();
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  padding: "13px 18px",
+                  borderRadius: "12px",
+                  border: "none",
+                  fontSize: "14px",
+                  outline: "none",
+                  background: "#ffffff",
+                  color: "#0f172a",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => handleAISearch()}
+                disabled={isAISearching}
+                style={{
+                  background: "linear-gradient(135deg, #10b981, #059669)",
+                  color: "#ffffff",
+                  border: "none",
+                  padding: "13px 24px",
+                  borderRadius: "12px",
+                  fontWeight: "800",
+                  fontSize: "14px",
+                  cursor: isAISearching ? "wait" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  boxShadow: "0 4px 14px rgba(16, 185, 129, 0.4)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {isAISearching ? "🔍 Đang tìm..." : "⚡ Hỏi AI"}
+              </button>
+            </div>
+
+            {/* Gợi ý câu hỏi mẫu */}
+            <div style={{ display: "flex", gap: "8px", marginTop: "12px", flexWrap: "wrap", alignItems: "center" }}>
+              <span style={{ fontSize: "11.5px", color: "#a7f3d0", fontWeight: "600" }}>Gợi ý mẫu:</span>
+              {[
+                "Laptop văn phòng mỏng nhẹ dưới 20 triệu",
+                "PC Gaming cấu hình cao chơi mượt GTA V",
+                "Điện thoại Android chụp ảnh đẹp muốn đổi iPhone",
+                "MacBook cấu hình mạnh làm đồ họa",
+              ].map((sample) => (
+                <button
+                  key={sample}
+                  type="button"
+                  onClick={() => {
+                    setAiSearchQuery(sample);
+                    handleAISearch(sample);
+                  }}
+                  style={{
+                    background: "rgba(255, 255, 255, 0.12)",
+                    border: "1px solid rgba(255, 255, 255, 0.25)",
+                    color: "#f1f5f9",
+                    padding: "4px 10px",
+                    borderRadius: "8px",
+                    fontSize: "11.5px",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  {sample}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Các số liệu thống kê */}
           <div className={styles.statsRow}>
             <div className={styles.statItem}>
@@ -301,7 +455,7 @@ export default function HomePage() {
           </div>
 
           <div className={styles.searchSummary}>
-            Hiển thị <strong>{filteredListings.length}</strong> thiết bị đang chờ giao lưu
+            Hiển thị <strong>{displayListings.length}</strong> thiết bị {aiSearchResult ? "được AI đề xuất" : "đang chờ giao lưu"}
           </div>
         </div>
       </section>
@@ -310,18 +464,91 @@ export default function HomePage() {
           4. DANH SÁCH BÀI ĐĂNG TRAO ĐỔI (CARDS GRID)
           ======================================================== */}
       <main className={styles.mainContentSection}>
+        {/* BANNER TƯ VẤN CỦA TRỢ LÝ AI (KHI ĐANG TÌM KIẾM BẰNG AI) */}
+        {aiSearchResult && (
+          <div
+            style={{
+              background: "#ecfdf5",
+              border: "1.5px solid #6ee7b7",
+              borderRadius: "18px",
+              padding: "20px 24px",
+              marginBottom: "32px",
+              boxShadow: "0 6px 20px rgba(5, 150, 105, 0.1)",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px", flexWrap: "wrap", gap: "10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "24px" }}>💡</span>
+                <span style={{ fontSize: "16px", fontWeight: "800", color: "#065f46" }}>
+                  Phân Tích & Tư Vấn Của Trợ Lý AI Cho Bạn
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleClearAISearch}
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #cbd5e1",
+                  color: "#475569",
+                  padding: "6px 14px",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                }}
+              >
+                ✕ Đóng gợi ý AI (Hiện tất cả {listings.length} máy)
+              </button>
+            </div>
+
+            <p style={{ fontSize: "14.5px", color: "#14532d", margin: "0 0 12px", lineHeight: "1.6" }}>
+              {aiSearchResult.aiAdvice}
+            </p>
+
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+              <span style={{ fontSize: "12px", fontWeight: "700", color: "#047857" }}>Tiêu chí đã phát hiện:</span>
+              {aiSearchResult.detectedCriteria.category && (
+                <span style={{ background: "#d1fae5", color: "#065f46", padding: "3px 8px", borderRadius: "6px", fontSize: "11.5px", fontWeight: "700" }}>
+                  Danh mục: {aiSearchResult.detectedCriteria.category.toUpperCase()}
+                </span>
+              )}
+              {aiSearchResult.detectedCriteria.maxPrice && (
+                <span style={{ background: "#d1fae5", color: "#065f46", padding: "3px 8px", borderRadius: "6px", fontSize: "11.5px", fontWeight: "700" }}>
+                  Ngân sách: ≤ {(aiSearchResult.detectedCriteria.maxPrice / 1000000).toFixed(0)} triệu
+                </span>
+              )}
+              {aiSearchResult.detectedCriteria.intent && (
+                <span style={{ background: "#d1fae5", color: "#065f46", padding: "3px 8px", borderRadius: "6px", fontSize: "11.5px", fontWeight: "700" }}>
+                  Nhu cầu: {aiSearchResult.detectedCriteria.intent}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className={styles.sectionHeading}>
           <div>
-            <h2 className={styles.headingTitle}>Thiết Bị Nổi Bật Đang Chờ Trao Đổi</h2>
+            <h2 className={styles.headingTitle}>
+              {aiSearchResult ? "Các Thiết Bị Phù Hợp Nhất Theo AI" : "Thiết Bị Nổi Bật Đang Chờ Trao Đổi"}
+            </h2>
             <p className={styles.headingSubtitle}>
-              Khám phá các đề xuất giao lưu thiết bị có giá trị tương đương hoặc bù trừ hợp lý.
+              {aiSearchResult
+                ? `Tìm thấy ${displayListings.length} kết quả khớp với truy vấn của bạn, sắp xếp theo độ tương thích giảm dần.`
+                : "Khám phá các đề xuất giao lưu thiết bị có giá trị tương đương hoặc bù trừ hợp lý."}
             </p>
           </div>
         </div>
 
         <div className={styles.productGrid}>
-          {filteredListings.map((item) => (
-            <article key={item.id} className={styles.productCard}>
+          {displayListings.map(({ item, matchScore, matchReason, highlightSpecs }) => (
+            <article
+              key={item.id}
+              className={styles.productCard}
+              style={{
+                border: matchScore && matchScore >= 80 ? "2px solid #10b981" : undefined,
+                boxShadow: matchScore && matchScore >= 80 ? "0 10px 30px rgba(16, 185, 129, 0.15)" : undefined,
+              }}
+            >
               {/* Phần hình ảnh & badge */}
               <div className={styles.cardVisualBanner} style={{ background: item.gradientBg }}>
                 <span className={styles.typeBadge}>{item.categoryName}</span>
@@ -337,6 +564,34 @@ export default function HomePage() {
 
               {/* Phần thân thẻ sản phẩm */}
               <div className={styles.cardBody}>
+                {/* Huy hiệu Độ tương thích AI nếu có */}
+                {matchScore !== undefined && (
+                  <div
+                    style={{
+                      background: "linear-gradient(135deg, #059669, #047857)",
+                      color: "#ffffff",
+                      padding: "8px 12px",
+                      borderRadius: "10px",
+                      marginBottom: "10px",
+                      fontSize: "12px",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontWeight: "800", fontSize: "11px", letterSpacing: "0.5px" }}>
+                        🎯 ĐỘ TƯƠNG THÍCH AI:
+                      </span>
+                      <span style={{ background: "rgba(255,255,255,0.25)", padding: "2px 8px", borderRadius: "6px", fontWeight: "800" }}>
+                        {matchScore}%
+                      </span>
+                    </div>
+                    {matchReason && (
+                      <div style={{ fontSize: "11px", opacity: 0.95, marginTop: "4px", lineHeight: "1.3" }}>
+                        💡 {matchReason}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <h3 className={styles.productTitle}>{item.title}</h3>
 
                 {/* Thông số kỹ thuật tóm tắt */}
