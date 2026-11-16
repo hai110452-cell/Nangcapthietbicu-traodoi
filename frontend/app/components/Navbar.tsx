@@ -61,6 +61,7 @@ export default function Navbar() {
   const navItems = [
     { label: "Khám phá", href: "/" },
     { label: "Đổi đồ & Tiến trình", href: "/trades" },
+    { label: "📐 Bản vẽ thiết kế", href: "/wireframe" },
     ...(currentRole === "admin"
       ? [{ label: "Quản trị Toàn Web", href: "/admin", isCMS: true }]
       : []),
