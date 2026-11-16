@@ -1,0 +1,1202 @@
+/* ==========================================================================
+   CEP LUXURY PLATFORM - HOMEPAGE CSS (HAUTE EMERALD & CHAMPAGNE GOLD)
+   Thiết kế cao cấp, chuẩn phong cách Luxury Tech Exchange
+   ========================================================================== */
+
+/* 1. KHUNG TOÀN CỤC & TỔNG THỂ */
+.pageWrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8fafc;
+  color: #0f172a;
+  font-family: var(--font-plus-jakarta), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  letter-spacing: -0.015em;
+  position: relative;
+}
+
+/* 2. THANH ĐIỀU HƯỚNG (HEADER & NAVBAR) */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.75) !important;
+  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.headerContainer {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.logoArea {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.logoArea:hover {
+  transform: translateY(-1px) scale(1.01) !important;
+}
+
+.logoIcon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logoText {
+  display: flex;
+  flex-direction: column;
+}
+
+.brandName {
+  font-size: 19px;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.brandSlogan {
+  font-size: 11px;
+  color: #047857;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.navMenu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.navLink {
+  text-decoration: none;
+  color: #334155 !important;
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 8px 16px !important;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.navLink:hover {
+  color: #047857 !important;
+  border-color: #a7f3d0 !important;
+  background: #f0fdf4 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.12);
+}
+
+.navLinkActive {
+  color: #065f46 !important;
+  font-weight: 800 !important;
+  border-color: #059669 !important;
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%) !important;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.8) !important;
+}
+
+.navLinkActive::after {
+  display: none !important;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.btnPostTrade {
+  background: linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 6px 18px rgba(4, 120, 87, 0.28), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.btnPostTrade:hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 10px 24px rgba(4, 120, 87, 0.38), inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+}
+
+.btnLogin {
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.btnLogin:hover {
+  background-color: #ffffff;
+  border-color: #047857;
+  color: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(4, 120, 87, 0.12);
+}
+
+/* 3. HERO BANNER & BỘ TÌM KIẾM TRAO ĐỔI */
+.heroSection {
+  background: 
+    radial-gradient(ellipse at 15% 25%, rgba(16, 185, 129, 0.22) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 70%, rgba(245, 158, 11, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(6, 78, 59, 0.4) 0%, transparent 70%),
+    linear-gradient(145deg, #021a14 0%, #064e3b 45%, #032e24 100%);
+  color: #ffffff;
+  padding: 96px 24px 108px;
+  position: relative;
+  overflow: hidden;
+}
+
+.heroSection::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.heroSection::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.3), rgba(52, 211, 153, 0.4), transparent);
+}
+
+.heroContent {
+  max-width: 1080px;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 20px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 26px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  color: #ecfdf5;
+  letter-spacing: 0.4px;
+  animation: luxuryGlow 4s infinite ease-in-out;
+}
+
+@keyframes luxuryGlow {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(167, 243, 208, 0.2);
+  }
+  50% {
+    box-shadow: 0 6px 24px rgba(5, 150, 105, 0.35), 0 0 0 1.5px rgba(245, 158, 11, 0.45);
+  }
+}
+
+.heroTitle {
+  font-size: 52px;
+  font-weight: 900;
+  line-height: 1.18;
+  margin-bottom: 22px;
+  letter-spacing: -1.2px;
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.heroHighlight {
+  background: linear-gradient(135deg, #6ee7b7 0%, #34d399 35%, #fbbf24 85%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+.heroDescription {
+  font-size: 18px;
+  color: #e2e8f0;
+  max-width: 740px;
+  margin: 0 auto 46px;
+  line-height: 1.65;
+  font-weight: 400;
+}
+
+/* HỘP TÌM KIẾM GIAO LƯU THIẾT BỊ 2 CHIỀU (LUXURY FINDER CARD) */
+.exchangeFinderCard {
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 24px;
+  padding: 30px 34px;
+  box-shadow: 0 25px 60px -10px rgba(2, 26, 20, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto;
+  gap: 20px;
+  align-items: center;
+  text-align: left;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.exchangeFinderCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 35px 75px -12px rgba(2, 26, 20, 0.55), 0 0 0 1px rgba(167, 243, 208, 0.5);
+}
+
+.finderGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.finderLabel {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.finderInput {
+  border: 1.5px solid #cbd5e1;
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-size: 14.5px;
+  color: #0f172a;
+  font-weight: 500;
+  outline: none;
+  font-family: inherit;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  background: #f8fafc;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.finderInput:focus {
+  border-color: #047857;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(4, 120, 87, 0.12), inset 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.swapIconWrapper {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  color: #047857;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: bold;
+  border: 1.5px solid #a7f3d0;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  margin-top: 22px;
+  box-shadow: 0 4px 12px rgba(4, 120, 87, 0.15);
+}
+
+.swapIconWrapper:hover {
+  transform: rotate(180deg) scale(1.1);
+  background: #d1fae5;
+  border-color: #059669;
+  box-shadow: 0 6px 18px rgba(4, 120, 87, 0.25);
+}
+
+.btnFindMatch {
+  background: linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 14px 32px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  font-family: inherit;
+  cursor: pointer;
+  height: 52px;
+  margin-top: 22px;
+  white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(4, 120, 87, 0.32), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.btnFindMatch:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 28px rgba(4, 120, 87, 0.42), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+}
+
+.btnFindMatch:active {
+  transform: translateY(0);
+}
+
+/* THỐNG KÊ HERO SANG TRỌNG */
+.statsRow {
+  display: flex;
+  justify-content: center;
+  gap: 56px;
+  margin-top: 48px;
+}
+
+.statItem {
+  text-align: center;
+}
+
+.statNumber {
+  font-size: 28px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+}
+
+.statLabel {
+  font-size: 13px;
+  color: #a7f3d0;
+  margin-top: 3px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+/* 4. THANH PHÂN LOẠI & LỌC DANH MỤC */
+.categoryBarSection {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 18px 24px;
+  position: sticky;
+  top: 68px;
+  z-index: 50;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02);
+}
+
+.categoryContainer {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.tabList {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.tabItem {
+  padding: 9px 20px;
+  border-radius: 9999px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tabItem:hover {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+}
+
+.tabItemActive {
+  background: linear-gradient(135deg, #064e3b 0%, #047857 100%);
+  color: #ffffff;
+  border-color: #064e3b;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(4, 120, 87, 0.25);
+}
+
+.tabItemActive:hover {
+  background: linear-gradient(135deg, #065f46 0%, #059669 100%);
+  color: #ffffff;
+}
+
+.searchSummary {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* 5. KHU VỰC DANH SÁCH BÀI ĐĂNG TRAO ĐỔI (CARDS GRID) */
+.mainContentSection {
+  max-width: 1280px;
+  margin: 48px auto 72px;
+  padding: 0 24px;
+  width: 100%;
+}
+
+.sectionHeading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 32px;
+}
+
+.headingTitle {
+  font-size: 26px;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.5px;
+}
+
+.headingSubtitle {
+  font-size: 14.5px;
+  color: #64748b;
+  margin-top: 5px;
+}
+
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 32px;
+}
+
+.productCard {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  position: relative;
+}
+
+.productCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 24px 44px -10px rgba(4, 120, 87, 0.16), 0 10px 20px -5px rgba(15, 23, 42, 0.05);
+  border-color: #a7f3d0;
+}
+
+.cardVisualBanner {
+  height: 200px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.cardVisualBanner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.18) 0%, transparent 68%);
+  pointer-events: none;
+}
+
+.typeBadge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  z-index: 2;
+}
+
+.exchangeTypeBadge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.badgeEven {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(4, 120, 87, 0.35);
+}
+
+.badgePlus {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
+}
+
+.deviceIconPlaceholder {
+  font-size: 72px;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.32));
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.productCard:hover .deviceIconPlaceholder {
+  transform: scale(1.14);
+}
+
+.cardBody {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.productTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 8px;
+  line-height: 1.35;
+  letter-spacing: -0.3px;
+}
+
+.specsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.specPill {
+  font-size: 11.5px;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 4px 9px;
+  border-radius: 6px;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+}
+
+.estimatedValue {
+  font-size: 13.5px;
+  color: #64748b;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.valAmount {
+  font-size: 17px;
+  font-weight: 900;
+  color: #047857;
+  letter-spacing: -0.3px;
+}
+
+/* KHỐI NHU CẦU ĐỔI LẤY THIẾT BỊ NÀO (LUXURY DEMAND BOX) */
+.targetExchangeBox {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1px solid #a7f3d0;
+  border-left: 4px solid #059669;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.05);
+}
+
+.targetLabel {
+  font-size: 11px;
+  font-weight: 800;
+  color: #047857;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.targetValue {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #064e3b;
+  line-height: 1.45;
+}
+
+.ownerInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 14px;
+  border-top: 1px solid #f1f5f9;
+  margin-top: auto;
+  font-size: 12.5px;
+  color: #64748b;
+}
+
+.ownerDetail {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ownerAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #1e293b;
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.cardActionButtons {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.btnProposeTrade {
+  background: linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+  box-shadow: 0 4px 14px rgba(4, 120, 87, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+.btnProposeTrade:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(4, 120, 87, 0.38);
+}
+
+.btnDetail {
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btnDetail:hover {
+  background: #ffffff;
+  border-color: #94a3b8;
+  color: #0f172a;
+  transform: translateY(-1px);
+}
+
+/* 6. CÔNG CỤ TÍNH BÙ TRỪ & ĐỊNH GIÁ GIAO LƯU */
+.calculatorSection {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 84px 24px;
+}
+
+.calcContainer {
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.calcTitleArea {
+  text-align: center;
+  margin-bottom: 46px;
+}
+
+.calcHeading {
+  font-size: 32px;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.6px;
+}
+
+.calcDesc {
+  color: #64748b;
+  font-size: 16px;
+  margin-top: 8px;
+}
+
+.calcGrid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 28px;
+  align-items: center;
+}
+
+.calcCard {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.04);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.calcCard:hover {
+  border-color: #a7f3d0;
+  box-shadow: 0 18px 36px -10px rgba(4, 120, 87, 0.12);
+  transform: translateY(-2px);
+}
+
+.calcCardTitle {
+  font-size: 16px;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.calcSelect {
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1.5px solid #cbd5e1;
+  background: #f8fafc;
+  font-size: 14.5px;
+  color: #0f172a;
+  outline: none;
+  margin-bottom: 18px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.calcSelect:focus {
+  border-color: #047857;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(4, 120, 87, 0.12);
+}
+
+.calcPricePreview {
+  font-size: 13.5px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.calcPriceVal {
+  font-weight: 900;
+  color: #047857;
+  font-size: 20px;
+  margin-left: 6px;
+  letter-spacing: -0.3px;
+}
+
+.calcArrowCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 26px;
+  color: #047857;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1.5px solid #a7f3d0;
+  box-shadow: 0 4px 16px rgba(4, 120, 87, 0.12);
+}
+
+.calcResultBox {
+  margin-top: 40px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%);
+  border: 1.5px solid #a7f3d0;
+  border-radius: 20px;
+  padding: 32px 28px;
+  text-align: center;
+  box-shadow: 0 16px 36px -10px rgba(4, 120, 87, 0.16);
+}
+
+.calcResultLabel {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #047857;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.calcResultDifference {
+  font-size: 34px;
+  font-weight: 900;
+  color: #064e3b;
+  margin: 12px 0;
+  letter-spacing: -0.8px;
+}
+
+.calcResultNote {
+  font-size: 14px;
+  color: #047857;
+  max-width: 640px;
+  margin: 0 auto;
+  font-weight: 500;
+}
+
+/* 7. QUY TRÌNH 4 BƯỚC ĐỔI MÁY AN TOÀN */
+.howItWorksSection {
+  max-width: 1280px;
+  margin: 92px auto;
+  padding: 0 24px;
+  text-align: center;
+}
+
+.stepGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 30px;
+  margin-top: 48px;
+}
+
+.stepCard {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 36px 26px;
+  text-align: center;
+  position: relative;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+}
+
+.stepCard:hover {
+  transform: translateY(-8px);
+  border-color: #a7f3d0;
+  box-shadow: 0 20px 36px -8px rgba(4, 120, 87, 0.14);
+}
+
+.stepNumber {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #064e3b 0%, #047857 100%);
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  border: 2px solid #a7f3d0;
+  box-shadow: 0 6px 16px rgba(4, 120, 87, 0.25);
+}
+
+.stepTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 10px;
+  letter-spacing: -0.3px;
+}
+
+.stepDescription {
+  font-size: 13.5px;
+  color: #64748b;
+  line-height: 1.55;
+}
+
+/* 8. MODAL ĐỀ XUẤT ĐỔI MÁY (POPUP TRẢI NGHIỆM) */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 26, 20, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.modalWindow {
+  background: #ffffff;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 560px;
+  box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modalHeader {
+  padding: 22px 28px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modalTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.4px;
+}
+
+.btnCloseModal {
+  background: #f1f5f9;
+  border: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnCloseModal:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.modalBody {
+  padding: 26px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.modalFieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modalLabel {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.modalInput,
+.modalTextarea {
+  border: 1.5px solid #cbd5e1;
+  padding: 13px 18px;
+  border-radius: 12px;
+  font-size: 14.5px;
+  outline: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  background: #f8fafc;
+}
+
+.modalInput:focus,
+.modalTextarea:focus {
+  border-color: #047857;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(4, 120, 87, 0.12);
+}
+
+.modalFooter {
+  padding: 20px 28px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+/* 9. CHÂN TRANG (FOOTER SANG TRỌNG) */
+.footer {
+  background: #021a14;
+  color: #a7f3d0;
+  padding: 68px 24px 28px;
+  margin-top: auto;
+  position: relative;
+  border-top: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.footerContainer {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 2fr repeat(3, 1fr);
+  gap: 48px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid rgba(6, 78, 59, 0.6);
+}
+
+.footerBrandCol {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.footerLogoText {
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.4px;
+}
+
+.footerColTitle {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 18px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.footerLinks {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+}
+
+.footerLinks a {
+  text-decoration: none;
+  color: #a7f3d0;
+  font-size: 13.5px;
+  transition: all 0.2s ease;
+}
+
+.footerLinks a:hover {
+  color: #ffffff;
+  transform: translateX(3px);
+}
+
+.footerBottom {
+  max-width: 1280px;
+  margin: 28px auto 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #6ee7b7;
+}
+
+/* 10. THIẾT KẾ ĐÁP ỨNG TRÊN MOBILE & TABLET (RESPONSIVE) */
+@media (max-width: 900px) {
+  .exchangeFinderCard {
+    grid-template-columns: 1fr;
+  }
+  .swapIconWrapper {
+    margin: 0 auto;
+  }
+  .calcGrid {
+    grid-template-columns: 1fr;
+  }
+  .calcArrowCol {
+    transform: rotate(90deg);
+  }
+  .footerContainer {
+    grid-template-columns: 1fr 1fr;
+  }
+  .navMenu {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .heroTitle {
+    font-size: 32px;
+  }
+  .productGrid {
+    grid-template-columns: 1fr;
+  }
+  .footerContainer {
+    grid-template-columns: 1fr;
+  }
+  .footerBottom {
+    flex-direction: column;
+    gap: 14px;
+    text-align: center;
+  }
+}
