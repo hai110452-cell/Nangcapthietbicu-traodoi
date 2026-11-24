@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 1250" width="100%" height="100%">
+  <defs>
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#064e3b" />
+      <stop offset="50%" stop-color="#065f46" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.08" />
+    </filter>
+    <style>
+      .title-text { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-weight: 800; fill: #0f172a; }
+      .badge-text { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-weight: 700; font-size: 11px; fill: #059669; }
+      .mod-title { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-weight: 800; font-size: 15px; }
+      .item-text { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-weight: 500; font-size: 12.5px; fill: #334155; }
+      .arrow { stroke: #059669; stroke-width: 2.5; stroke-dasharray: 4,4; fill: none; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="850" height="1250" fill="#f8fafc" rx="16" />
+
+  <!-- Top Title Area -->
+  <g transform="translate(425, 45)" text-anchor="middle">
+    <rect x="-160" y="-18" width="320" height="28" rx="14" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1.5" />
+    <text y="0" text-anchor="middle" class="badge-text">📐 SƠ ĐỒ CẤU TRÚC TĨNH (SITEMAP DỌC)</text>
+    <text y="42" class="title-text" font-size="24">HỆ THỐNG TRAO ĐỔI CEP.EXCHANGE</text>
+    <text y="66" font-family="'Segoe UI', system-ui" font-size="13" fill="#64748b">Cấu trúc phân cấp các module chức năng &amp; thành phần trang</text>
+  </g>
+
+  <!-- ROOT NODE -->
+  <g transform="translate(175, 135)" filter="url(#cardShadow)">
+    <rect width="500" height="60" rx="14" fill="url(#headerGrad)" />
+    <text x="250" y="32" text-anchor="middle" fill="#ffffff" font-family="'Segoe UI', system-ui" font-size="16" font-weight="800">
+      📱 CEP.EXCHANGE (ROOT APPLICATION)
+    </text>
+    <text x="250" y="48" text-anchor="middle" fill="#a7f3d0" font-family="'Segoe UI', system-ui" font-size="11" font-weight="600">
+      Nền Tảng Trao Đổi Máy Tính, Laptop &amp; Điện Thoại Thông Minh
+    </text>
+  </g>
+
+  <!-- LINE TO MODULE 1 -->
+  <path d="M 425 195 L 425 230" stroke="#059669" stroke-width="3" />
+  <polygon points="425,238 420,228 430,228" fill="#059669" />
+
+  <!-- MODULE 01: TRANG CHỦ -->
+  <g transform="translate(90, 240)" filter="url(#cardShadow)">
+    <rect width="670" height="205" rx="14" fill="#ffffff" stroke="#a7f3d0" stroke-width="1.5" />
+    <path d="M 0 14 Q 0 0 14 0 L 656 0 Q 670 0 670 14 L 670 42 L 0 42 Z" fill="#ecfdf5" />
+    <rect x="16" y="11" width="32" height="20" rx="6" fill="#059669" />
+    <text x="32" y="25" text-anchor="middle" fill="#ffffff" font-family="'Segoe UI', system-ui" font-size="11" font-weight="800">01</text>
+    <text x="58" y="27" class="mod-title" fill="#065f46">PHÂN HỆ TRANG CHỦ (HOME FEED /)</text>
+
+    <!-- Sub items -->
+    <text x="24" y="68" class="item-text">• <tspan font-weight="700">Thanh tìm kiếm 2 chiều:</tspan> Bạn đang có máy gì? ⇄ Bạn muốn đổi lấy máy nào?</text>
+    <text x="24" y="93" class="item-text">• <tspan font-weight="700">Trợ lý AI tìm kiếm thông minh:</tspan> Phân tích ngôn ngữ tự nhiên &amp; đề xuất máy phù hợp</text>
+    <text x="24" y="118" class="item-text">• <tspan font-weight="700">Thanh lọc danh mục:</tspan> Tất cả, Laptop &amp; MacBook, Máy tính bàn PC, iPhone, Android</text>
+    <text x="24" y="143" class="item-text">• <tspan font-weight="700">Lưới sản phẩm nổi bật:</tspan> Thẻ thiết bị kèm nhãn [Đổi ngang] hoặc [Bù trừ], định giá tham khảo</text>
+    <text x="24" y="168" class="item-text">• <tspan font-weight="700">Máy tính bù trừ tự động:</tspan> Tính toán số tiền chênh lệch giữa hai thiết bị A và B</text>
+    <text x="24" y="193" class="item-text">• <tspan font-weight="700">Widget theo dõi giao dịch:</tspan> Hiển thị hợp đồng đang đổi &amp; lịch hẹn kiểm định</text>
+  </g>
+
+  <!-- LINE TO MODULE 2 -->
+  <path d="M 425 445 L 425 480" stroke="#0284c7" stroke-width="3" />
+  <polygon points="425,488 420,478 430,478" fill="#0284c7" />
+
+  <!-- MODULE 02: TRA CỨU & ĐĂNG BÀI -->
+  <g transform="translate(90, 490)" filter="url(#cardShadow)">
+    <rect width="670" height="185" rx="14" fill="#ffffff" stroke="#bfdbfe" stroke-width="1.5" />
+    <path d="M 0 14 Q 0 0 14 0 L 656 0 Q 670 0 670 14 L 670 42 L 0 42 Z" fill="#eff6ff" />
+    <rect x="16" y="11" width="32" height="20" rx="6" fill="#0284c7" />
+    <text x="32" y="25" text-anchor="middle" fill="#ffffff" font-family="'Segoe UI', system-ui" font-size="11" font-weight="800">02</text>
+    <text x="58" y="27" class="mod-title" fill="#1e40af">TRA CỨU &amp; ĐĂNG BÀI TRAO ĐỔI (/post-item)</text>
+
+    <!-- Sub items -->
+    <text x="24" y="68" class="item-text">• <tspan font-weight="700">AI Auto-Writer:</tspan> Nhập 1 dòng máy ngắn, AI tự viết tiêu đề, thông số chuẩn hãng &amp; định giá</text>
+    <text x="24" y="93" class="item-text">• <tspan font-weight="700">AI Computer Vision 2.0:</tspan> Tải ảnh thật, quét nhận diện vật thể &amp; đối chiếu thư viện phần cứng</text>
+    <text x="24" y="118" class="item-text">• <tspan font-weight="700">Bộ lọc thông minh:</tspan> Tra cứu theo hãng (Apple, Dell, MSI...), tầm giá, tình trạng pin/màn hình</text>
+    <text x="24" y="143" class="item-text">• <tspan font-weight="700">Trang Chi tiết thiết bị:</tspan> Bảng thông số phần cứng, đánh giá sao uy tín &amp; bình luận thực tế</text>
+    <text x="24" y="168" class="item-text">• <tspan font-weight="700">Hộp khai báo nhu cầu:</tspan> Ghi rõ mong muốn đổi sang dòng máy nào &amp; tiêu chí bù trừ</text>
+  </g>
+
+  <!-- LINE TO MODULE 3 -->
+  <path d="M 425 675 L 425 710" stroke="#d97706" stroke-width="3" />
+  <polygon points="425,718 420,708 430,708" fill="#d97706" />
+
+  <!-- MODULE 03: TỦ MÁY & QUẢN LÝ TIẾN TRÌNH -->
+  <g transform="translate(90, 720)" filter="url(#cardShadow)">
+    <rect width="670" height="185" rx="14" fill="#ffffff" stroke="#fde047" stroke-width="1.5" />
+    <path d="M 0 14 Q 0 0 14 0 L 656 0 Q 670 0 670 14 L 670 42 L 0 42 Z" fill="#fefce8" />
+    <rect x="16" y="11" width="32" height="20" rx="6" fill="#d97706" />
+    <text x="32" y="25" text-anchor="middle" fill="#ffffff" font-family="'Segoe UI', system-ui" font-size="11" font-weight="800">03</text>
+    <text x="58" y="27" class="mod-title" fill="#854d0e">QUẢN LÝ TIẾN TRÌNH ĐỔI ĐỒ &amp; THƯỞNG XANH (/trades)</text>
+
+    <!-- Sub items -->
+    <text x="24" y="68" class="item-text">• <tspan font-weight="700">Kho máy của tôi:</tspan> Quản lý các thiết bị cá nhân đang niêm yết trên sàn giao dịch</text>
+    <text x="24" y="93" class="item-text">• <tspan font-weight="700">Hộp thư đề xuất đổi máy:</tspan> Phân loại lời mời nhận được &amp; lời mời đã gửi đi</text>
+    <text x="24" y="118" class="item-text">• <tspan font-weight="700">Tiến trình 5 bước:</tspan> 1. Gửi đề xuất ➔ 2. Thỏa thuận ➔ 3. Kiểm định ➔ 4. Bàn giao ➔ 5. Hoàn tất</text>
+    <text x="24" y="143" class="item-text">• <tspan font-weight="700">Mã QR Phiếu Giao Lưu:</tspan> Định danh bảo chứng an toàn Escrow (#CEP-2026-XXX)</text>
+    <text x="24" y="168" class="item-text">• <tspan font-weight="700">Ví Điểm Thưởng Xanh (/green-points):</tspan> Nhận điểm thưởng tái chế &amp; đổi voucher ưu đãi</text>
+  </g>
+
+  <!-- LINE TO MODULE 4 -->
+  <path d="M 425 905 L 425 940" stroke="#7c3aed" stroke-width="3" />
+  <polygon points="425,948 420,938 430,938" fill="#7c3aed" />
+
+  <!-- MODULE 04: TRUNG TÂM QUẢN TRỊ & THÔNG BÁO -->
+  <g transform="translate(90, 950)" filter="url(#cardShadow)">
+    <rect width="670" height="210" rx="14" fill="#ffffff" stroke="#e9d5ff" stroke-width="1.5" />
+    <path d="M 0 14 Q 0 0 14 0 L 656 0 Q 670 0 670 14 L 670 42 L 0 42 Z" fill="#faf5ff" />
+    <rect x="16" y="11" width="32" height="20" rx="6" fill="#7c3aed" />
+    <text x="32" y="25" text-anchor="middle" fill="#ffffff" font-family="'Segoe UI', system-ui" font-size="11" font-weight="800">04</text>
+    <text x="58" y="27" class="mod-title" fill="#581c87">TRUNG TÂM KIỂM DUYỆT AI &amp; QUẢN TRỊ (/admin)</text>
+
+    <!-- Sub items -->
+    <text x="24" y="68" class="item-text">• <tspan font-weight="700">AI Moderation Dashboard:</tspan> Quét từ khóa cấm, spam, cọc tiền trước, iCloud ẩn &amp; giá ảo</text>
+    <text x="24" y="93" class="item-text">• <tspan font-weight="700">Chế độ Auto-Pilot 24/7:</tspan> Tự động phê duyệt các bài có điểm tin cậy AI Trust Score ≥ 88%</text>
+    <text x="24" y="118" class="item-text">• <tspan font-weight="700">Công cụ 1-Click:</tspan> Nút [AI Duyệt Hàng Loạt] &amp; Nút [AI Tự Động Tạo Bài Đăng Mẫu]</text>
+    <text x="24" y="143" class="item-text">• <tspan font-weight="700">Quản trị toàn diện:</tspan> Quản lý sản phẩm (CRUD), chỉnh sửa thông tin website, kiểm duyệt bình luận</text>
+    <text x="24" y="168" class="item-text">• <tspan font-weight="700">Phân quyền thành viên:</tspan> Phân loại vai trò Người dùng (User) / Quản trị viên (Admin)</text>
+    <text x="24" y="193" class="item-text">• <tspan font-weight="700">Hệ thống thông báo:</tspan> Nhắc lịch kiểm định phần cứng tại Trạm Kỹ Thuật CEP Care</text>
+  </g>
+
+  <!-- Bottom Footer Note -->
+  <text x="425" y="1200" text-anchor="middle" font-family="'Segoe UI', system-ui" font-size="11.5" fill="#94a3b8">
+    © 2026 CEP.EXCHANGE — Hệ Thống Trao Đổi Máy Tính &amp; Điện Thoại Uy Tín
+  </text>
+</svg>
