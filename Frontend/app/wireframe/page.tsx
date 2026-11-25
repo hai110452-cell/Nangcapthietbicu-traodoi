@@ -302,8 +302,8 @@ export default function WireframePage() {
       ),
     },
     {
-      title: "05. Hoàn Tất & Thưởng Xanh",
-      subtitle: "Biên bản bàn giao & tích lũy Green Points",
+      title: "05. Hoàn Tất Giao Dịch",
+      subtitle: "Biên bản bàn giao & đánh giá giao dịch",
       render: (
         <div style={mockupInnerStyle}>
           <div style={statusBarStyle}>
@@ -331,17 +331,17 @@ export default function WireframePage() {
             </div>
           </div>
 
-          {/* Green Points Reward */}
+          {/* Trade Success Box */}
           <div style={{ background: "linear-gradient(135deg, #065f46, #047857)", color: "#fff", padding: "12px", borderRadius: "10px", textAlign: "center", marginBottom: "14px" }}>
-            <span style={{ fontSize: "20px" }}>🌿</span>
-            <div style={{ fontSize: "13px", fontWeight: "900" }}>+100 ĐIỂM THƯỞNG XANH</div>
+            <span style={{ fontSize: "20px" }}>🤝</span>
+            <div style={{ fontSize: "13px", fontWeight: "900" }}>GIAO DỊCH THÀNH CÔNG</div>
             <div style={{ fontSize: "9px", opacity: 0.9, marginTop: "2px" }}>
-              Vì hành động tái sử dụng thiết bị công nghệ, giảm 2.4kg rác thải điện tử!
+              Hai bên đã hoàn tất nhận thiết bị và đối soát thông số an toàn.
             </div>
           </div>
 
           <button style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "none", background: "#0f172a", color: "#fff", fontSize: "10px", fontWeight: "800", cursor: "pointer" }}>
-            Đổi Quà Tại Green Points Hub
+            Đánh Giá Đối Tác Trao Đổi
           </button>
         </div>
       ),

@@ -8,7 +8,6 @@ export interface UserProfile {
   email: string;
   avatar: string;
   role: UserRole;
-  greenPoints?: number;
   dealCount: number;
   rating: number;
   status?: "active" | "locked";
@@ -294,15 +293,5 @@ export interface TradeDeal {
   status: "pending" | "agreed" | "inspecting" | "completed" | "rejected";
   updatedAt: string;
   note: string;
-}
-
-export interface EcoReward {
-  id: string;
-  title: string;
-  costPoints: number;
-  category: "voucher" | "service" | "gift";
-  icon: string;
-  description: string;
-  discountValue: string;
 }
 

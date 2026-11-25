@@ -1,15 +1,15 @@
 import type { NextConfig } from "next";
 
-const basePath = '/ProjectManager';
+// const basePath = '/ProjectManager';
 
 const nextConfig: NextConfig = {
   /* config options here */
-  output: "export",
-  basePath,
+  // output: "export",
+  // basePath,
   trailingSlash: true,
-  env: {
-    NEXT_PUBLIC_BASE_PATH: basePath,
-  },
+  // env: {
+  //   NEXT_PUBLIC_BASE_PATH: basePath,
+  // },
   images: {
     unoptimized: true,
     remotePatterns: [

@@ -45,7 +45,6 @@ export class AuthService {
   }
   async me(userId: string) {
     const r = await this.db.query(`SELECT u.id,u.full_name AS "name",u.email,u.avatar_url AS avatar,u.role,u.status,u.created_at,
-      COALESCE((SELECT SUM(points) FROM user_points_transactions p WHERE p.user_id=u.id),0)::int AS "greenPoints",
       (SELECT COUNT(*)::int FROM trades t WHERE (t.proposer_id=u.id OR t.receiver_id=u.id) AND t.status='completed') AS "dealCount",
       (SELECT ROUND(AVG(r.rating)::numeric,1) FROM reviews r JOIN listings l ON l.id=r.listing_id WHERE l.owner_id=u.id) AS rating
       FROM users u WHERE u.id=$1`, [userId]);

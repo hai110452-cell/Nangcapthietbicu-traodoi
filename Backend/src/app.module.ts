@@ -7,7 +7,6 @@ import { ListingsModule } from './listings/listings.module';
 import { TradesModule } from './trades/trades.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { ChatModule } from './chat/chat.module';
-import { RewardsModule } from './rewards/rewards.module';
 import { AdminModule } from './admin/admin.module';
 import { CategoriesModule } from './categories/categories.module';
 import { UsersModule } from './users/users.module';
@@ -15,5 +14,5 @@ import { UploadsModule } from './uploads/uploads.module';
 import { AiModule } from './ai/ai.module';
 import { JwtAuthGuard, RolesGuard } from './common/auth';
 import { SystemController } from './system.controller';
-@Module({ imports: [DatabaseModule, JwtModule.register({}), AuthModule, ListingsModule, TradesModule, ReviewsModule, ChatModule, RewardsModule, AdminModule, CategoriesModule, UsersModule, UploadsModule, AiModule], controllers: [SystemController], providers: [JwtAuthGuard, RolesGuard] })
+@Module({ imports: [DatabaseModule, JwtModule.register({}), AuthModule, ListingsModule, TradesModule, ReviewsModule, ChatModule, AdminModule, CategoriesModule, UsersModule, UploadsModule, AiModule], controllers: [SystemController], providers: [JwtAuthGuard, RolesGuard] })
 export class AppModule {}

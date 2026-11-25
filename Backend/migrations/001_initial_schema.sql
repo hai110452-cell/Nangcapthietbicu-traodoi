@@ -114,27 +114,6 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id, created_at);
 
-CREATE TABLE IF NOT EXISTS rewards (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(), title VARCHAR(255) NOT NULL,
-  cost_points INTEGER NOT NULL CHECK (cost_points >= 0), category VARCHAR(20) NOT NULL CHECK (category IN ('voucher','service','gift')),
-  icon VARCHAR(50), description TEXT NOT NULL DEFAULT '', discount_value VARCHAR(100), is_active BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  CONSTRAINT uq_rewards_title UNIQUE(title)
-);
-CREATE TABLE IF NOT EXISTS reward_redemptions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(), user_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
-  reward_id UUID NOT NULL REFERENCES rewards(id) ON DELETE RESTRICT, points_spent INTEGER NOT NULL CHECK (points_spent >= 0),
-  redemption_code VARCHAR(50) NOT NULL UNIQUE, status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active','used','expired','cancelled')),
-  redeemed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), expires_at TIMESTAMPTZ
-);
-CREATE TABLE IF NOT EXISTS user_points_transactions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(), user_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
-  points INTEGER NOT NULL CHECK (points <> 0), transaction_type VARCHAR(30) NOT NULL,
-  description TEXT NOT NULL DEFAULT '', trade_id UUID REFERENCES trades(id) ON DELETE SET NULL,
-  redemption_id UUID REFERENCES reward_redemptions(id) ON DELETE SET NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-CREATE INDEX IF NOT EXISTS idx_points_user_created ON user_points_transactions(user_id, created_at DESC);
-
 CREATE TABLE IF NOT EXISTS website_settings (
   id SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1), brand_name VARCHAR(150) NOT NULL DEFAULT 'CEP.EXCHANGE',
   brand_slogan VARCHAR(255) NOT NULL DEFAULT '', hero_title VARCHAR(255) NOT NULL DEFAULT '', hero_highlight VARCHAR(255) NOT NULL DEFAULT '',

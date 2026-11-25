@@ -31,7 +31,7 @@ Tạo database `cep_exchange` trước khi chạy migration. Nếu mật khẩu 
 npm run db:migrate
 npm run db:seed
 ```
-Migration tạo 19 bảng: `users`, `refresh_tokens`, `categories`, `listings`, `listing_images`, `listing_moderation_history`, `trades`, `trade_status_history`, `reviews`, `review_replies`, `review_helpful_votes`, `conversations`, `conversation_participants`, `messages`, `rewards`, `reward_redemptions`, `user_points_transactions`, `website_settings`, `audit_logs`.
+Migration tạo 16 bảng: `users`, `refresh_tokens`, `categories`, `listings`, `listing_images`, `listing_moderation_history`, `trades`, `trade_status_history`, `reviews`, `review_replies`, `review_helpful_votes`, `conversations`, `conversation_participants`, `messages`, `website_settings`, `audit_logs`.
 
 ## 4. Chạy backend
 ```bash
@@ -99,16 +99,6 @@ Không chạy lệnh cấp quyền này cho người dùng không tin cậy tron
 - `POST /api/chat/conversations/:id/messages`
 - `POST /api/chat/trades/:tradeId/open`
 
-### Green Points
-- `GET /api/rewards`
-- `GET /api/rewards/me/points`
-- `GET /api/rewards/me/history`
-- `GET /api/rewards/me/redemptions`
-- `POST /api/rewards/:id/redeem`
-- `POST /api/rewards/admin` (admin)
-- `POST /api/rewards/admin/points` (admin; cộng/trừ điểm thủ công, body `{ "userId": "uuid", "points": 100, "description": "..." }`)
-- `PATCH /api/rewards/admin/:id` (admin)
-
 ### Admin
 - `GET /api/admin/dashboard`
 - `GET /api/admin/settings`
@@ -124,7 +114,6 @@ Frontend hiện dùng kiểu dữ liệu localStorage/mock. Cần tạo một l�
 - `category` trong API dùng `laptop`, `pc`, `iphone`, `android`.
 - `exchangeType` dùng `even` hoặc `compensation`; giao diện có thể hiển thị `Đổi ngang` hoặc `Bù trừ`.
 - Tin mới tạo ở trạng thái `pending`, chỉ tin được duyệt mới xuất hiện công khai.
-- Đổi điểm dùng transaction và khóa bản ghi phần thưởng; điểm chỉ phát sinh từ `user_points_transactions`.
 - Chat hiện là REST API; WebSocket có thể được bổ sung ở giai đoạn sau nếu cần realtime.
 
 ## 8. Trạng thái triển khai
