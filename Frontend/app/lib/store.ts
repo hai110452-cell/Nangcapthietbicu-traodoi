@@ -34,22 +34,29 @@ export interface ExchangeItem {
   id: string;
   category: string;
   title: string;
+  description?: string;
   gradientBg: string;
   deviceIcon: string;
-  /** Ảnh Cloudinary của tin đăng, do API /listings trả về */
+  /** Ảnh Cloudinary của tin đăng, do API /listings trả về từ bảng listing_images */
   images?: Array<{ id?: string; url: string; sortOrder?: number }>;
   categoryName: string;
   type: "Đổi ngang" | "Bù trừ";
+  exchangeType?: "even" | "compensation";
   specs: string[];
   estimatedValue: string;
   valNumber: number;
   targetDemand: string;
   location: string;
   ownerName: string;
+  ownerAvatar?: string | null;
   rating: number;
   dealCount: number;
   reviewCount?: number;
   ownerId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  aiConfidence?: number | null;
+  aiDetectedInfo?: Record<string, any> | null;
   status?: "approved" | "pending" | "rejected" | "hidden" | "completed";
 }
 
@@ -290,7 +297,7 @@ export interface TradeDeal {
   compensationType: "even" | "proposer_adds" | "receiver_adds";
   compensationAmount: number;
   currentStep: 1 | 2 | 3 | 4 | 5;
-  status: "pending" | "agreed" | "inspecting" | "completed" | "rejected";
+  status: "pending" | "agreed" | "inspecting" | "completed" | "rejected" | "cancelled";
   updatedAt: string;
   note: string;
 }

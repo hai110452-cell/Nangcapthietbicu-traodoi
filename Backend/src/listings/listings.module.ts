@@ -48,7 +48,31 @@ class AutoApproveDto {
     FROM listings l JOIN categories c ON c.id=l.category_id JOIN users u ON u.id=l.owner_id WHERE ${where} ORDER BY l.created_at DESC LIMIT $${values.length-1} OFFSET $${values.length}`,values);
   return {items:rows.rows.map((x:any)=>({...x,estimatedValue:new Intl.NumberFormat('vi-VN').format(Number(x.valNumber))+' đ',type:x.exchangeType==='even'?'Đổi ngang':'Bù trừ',specs:Array.isArray(x.specs)?x.specs:Object.entries(x.specs||{}).map(([k,v])=>`${k}: ${v}`)})),pagination:{page,limit,total:Number(total.rows[0].total),pages:Math.ceil(Number(total.rows[0].total)/limit)}};
  }
- @Public() @Get(':id') async get(@Param('id') id:string) { const r=await this.db.query(`SELECT l.*,c.code AS category,c.name AS "categoryName",u.full_name AS "ownerName",u.avatar_url AS "ownerAvatar",u.id AS "ownerId",COALESCE((SELECT ROUND(AVG(rv.rating)::numeric,1) FROM reviews rv JOIN listings lx ON lx.id=rv.listing_id WHERE lx.owner_id=u.id),0) AS rating,(SELECT COUNT(*)::int FROM trades tx WHERE tx.listing_id=l.id AND tx.status='completed') AS "dealCount",(SELECT COUNT(*)::int FROM reviews rv WHERE rv.listing_id=l.id) AS "reviewCount",COALESCE((SELECT json_agg(json_build_object('id',im.id,'url',im.image_url,'sortOrder',im.sort_order) ORDER BY im.sort_order) FROM listing_images im WHERE im.listing_id=l.id),'[]'::json) AS images FROM listings l JOIN categories c ON c.id=l.category_id JOIN users u ON u.id=l.owner_id WHERE l.id=$1 AND l.deleted_at IS NULL AND l.status='approved'`,[id]); if(!r.rowCount) return {error:'Không tìm thấy tin đăng'}; const x:any=r.rows[0]; return {...x,deviceIcon:x.device_icon,aiConfidence:x.ai_confidence!==null?Number(x.ai_confidence):null,aiDetectedInfo:x.ai_detected_info||null,estimatedValue:new Intl.NumberFormat('vi-VN').format(Number(x.estimated_value))+' đ',valNumber:Number(x.estimated_value),type:x.exchange_type==='even'?'Đổi ngang':'Bù trừ',specs:Array.isArray(x.specs)?x.specs:Object.entries(x.specs||{}).map(([k,v])=>`${k}: ${v}`),gradientBg:({laptop:'linear-gradient(135deg, #334155 0%, #1e293b 100%)',pc:'linear-gradient(135deg, #065f46 0%, #064e3b 100%)',iphone:'linear-gradient(135deg, #4c1d95 0%, #581c87 100%)',android:'linear-gradient(135deg, #1e3a8a 0%, #1e1b4b 100%)'} as any)[x.category]||'',rating:Number(x.rating||0),dealCount:Number(x.dealCount||0),reviewCount:Number(x.reviewCount||0)}; }
+ @Public() @Get(':id') async get(@Param('id') id:string) {
+  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return {error:'Không tìm thấy tin đăng'};
+  const r=await this.db.query(`SELECT l.*,c.code AS category,c.name AS "categoryName",u.full_name AS "ownerName",u.avatar_url AS "ownerAvatar",u.id AS "ownerId",COALESCE((SELECT ROUND(AVG(rv.rating)::numeric,1) FROM reviews rv JOIN listings lx ON lx.id=rv.listing_id WHERE lx.owner_id=u.id),0) AS rating,(SELECT COUNT(*)::int FROM trades tx WHERE tx.listing_id=l.id AND tx.status='completed') AS "dealCount",(SELECT COUNT(*)::int FROM reviews rv WHERE rv.listing_id=l.id) AS "reviewCount",COALESCE((SELECT json_agg(json_build_object('id',im.id,'url',im.image_url,'sortOrder',im.sort_order) ORDER BY im.sort_order ASC, im.created_at ASC) FROM listing_images im WHERE im.listing_id=l.id),'[]'::json) AS images FROM listings l JOIN categories c ON c.id=l.category_id JOIN users u ON u.id=l.owner_id WHERE l.id=$1 AND l.deleted_at IS NULL AND l.status='approved'`,[id]);
+  if(!r.rowCount) return {error:'Không tìm thấy tin đăng'};
+  const x:any=r.rows[0];
+  return {
+    ...x,
+    deviceIcon:x.device_icon,
+    exchangeType:x.exchange_type,
+    targetDemand:x.target_demand,
+    createdAt:x.created_at,
+    updatedAt:x.updated_at,
+    aiConfidence:x.ai_confidence!==null?Number(x.ai_confidence):null,
+    aiDetectedInfo:x.ai_detected_info||null,
+    estimatedValue:new Intl.NumberFormat('vi-VN').format(Number(x.estimated_value))+' đ',
+    valNumber:Number(x.estimated_value),
+    type:x.exchange_type==='even'?'Đổi ngang':'Bù trừ',
+    specs:Array.isArray(x.specs)?x.specs:Object.entries(x.specs||{}).map(([k,v])=>`${k}: ${v}`),
+    gradientBg:({laptop:'linear-gradient(135deg, #334155 0%, #1e293b 100%)',pc:'linear-gradient(135deg, #065f46 0%, #064e3b 100%)',iphone:'linear-gradient(135deg, #4c1d95 0%, #581c87 100%)',android:'linear-gradient(135deg, #1e3a8a 0%, #1e1b4b 100%)'} as any)[x.category]||'linear-gradient(135deg, #334155 0%, #1e293b 100%)',
+    rating:Number(x.rating||0),
+    dealCount:Number(x.dealCount||0),
+    reviewCount:Number(x.reviewCount||0),
+    images:Array.isArray(x.images)?x.images:[],
+  };
+ }
  @ApiBearerAuth() @Post() async create(@Body() dto:CreateListingDto,@CurrentUser() user:any) {
   const cat=await this.db.query('SELECT id FROM categories WHERE code=$1 AND is_active=true',[dto.category]); if(!cat.rowCount) return {error:'Danh mục không hợp lệ'};
   const specsList = Array.isArray(dto.specs) ? dto.specs.map(String) : Object.values(dto.specs || {}).map(String);

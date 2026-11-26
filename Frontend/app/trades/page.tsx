@@ -10,8 +10,11 @@ export default function TradesPage() {
   const [deals, setDeals] = useState<TradeDeal[]>([]);
   const [activeTab, setActiveTab] = useState<"all" | "active" | "completed">("all");
   const [selectedDeal, setSelectedDeal] = useState<TradeDeal | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState<boolean>(false);
 
   const loadTrades = async () => {
+    setCurrentUserId(getStoredAuthUser()?.id || null);
     if (!getAccessToken()) { setDeals([]); setSelectedDeal(null); return; }
     try {
       const rows = await api<any[]>("/trades");
@@ -25,7 +28,7 @@ export default function TradesPage() {
         compensationType: row.compensation_type || row.compensationType || "even",
         compensationAmount: Number(row.compensation_amount || row.compensationAmount || 0),
         currentStep: Math.min(5, Math.max(1, Number(row.current_step || row.currentStep || 1))) as 1|2|3|4|5,
-        status: (row.status === "cancelled" ? "rejected" : row.status || "pending") as TradeDeal["status"],
+        status: (row.status || "pending") as TradeDeal["status"],
         updatedAt: row.updated_at ? new Date(row.updated_at).toLocaleString("vi-VN") : "Vừa cập nhật",
         note: row.note || "Chưa có ghi chú.",
       }));
@@ -34,7 +37,12 @@ export default function TradesPage() {
     } catch (error) { alert(error instanceof Error ? error.message : "Không tải được giao dịch."); }
   };
 
-  useEffect(() => { void loadTrades(); }, []);
+  useEffect(() => {
+    void loadTrades();
+    const handleAuthUpdate = () => { void loadTrades(); };
+    window.addEventListener("cep_auth_updated", handleAuthUpdate);
+    return () => window.removeEventListener("cep_auth_updated", handleAuthUpdate);
+  }, []);
 
   const stepLabels = [
     { num: 1, title: "Gửi đề xuất", desc: "Khởi tạo lời mời giao lưu" },
@@ -46,7 +54,8 @@ export default function TradesPage() {
 
   const handleAdvanceStep = async (dealId: string) => {
     const deal = deals.find((d) => d.id === dealId);
-    if (!deal) return;
+    if (!deal || isUpdating) return;
+    setIsUpdating(true);
     try {
       if (deal.status === "pending") {
         await api(`/trades/${dealId}/respond`, { method: "PATCH", body: JSON.stringify({ action: "agreed" }) });
@@ -57,11 +66,50 @@ export default function TradesPage() {
       await loadTrades();
     } catch (error) {
       alert(error instanceof Error ? error.message : "Không thể cập nhật giao dịch.");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
+  const handleRejectTrade = async (dealId: string) => {
+    if (isUpdating) return;
+    if (!window.confirm("Bạn có chắc chắn muốn từ chối đề xuất trao đổi này không?")) return;
+    setIsUpdating(true);
+    try {
+      await api(`/trades/${dealId}/respond`, {
+        method: "PATCH",
+        body: JSON.stringify({ action: "rejected" }),
+      });
+      await loadTrades();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Không thể từ chối đề xuất.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleCancelTrade = async (dealId: string) => {
+    if (isUpdating) return;
+    if (!window.confirm("Bạn có chắc chắn muốn hủy giao dịch trao đổi này không?")) return;
+    setIsUpdating(true);
+    try {
+      await api(`/trades/${dealId}/cancel`, {
+        method: "PATCH",
+        body: JSON.stringify({}),
+      });
+      await loadTrades();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Không thể hủy giao dịch.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const isActiveDeal = (d: TradeDeal) =>
+    d.status !== "completed" && d.status !== "rejected" && d.status !== "cancelled";
+
   const filteredDeals = deals.filter((d) => {
-    if (activeTab === "active") return d.status !== "completed" && d.status !== "rejected";
+    if (activeTab === "active") return isActiveDeal(d);
     if (activeTab === "completed") return d.status === "completed";
     return true;
   });
@@ -128,7 +176,7 @@ export default function TradesPage() {
             const isActive = activeTab === tab;
             const labelMap = {
               all: `Tất cả giao dịch (${deals.length})`,
-              active: `Đang tiến hành (${deals.filter((d) => d.status !== "completed").length})`,
+              active: `Đang tiến hành (${deals.filter(isActiveDeal).length})`,
               completed: `Đã hoàn tất (${deals.filter((d) => d.status === "completed").length})`,
             };
             return (
@@ -189,12 +237,20 @@ export default function TradesPage() {
                         background:
                           deal.status === "completed"
                             ? "#dcfce7"
+                            : deal.status === "rejected"
+                            ? "#fee2e2"
+                            : deal.status === "cancelled"
+                            ? "#f1f5f9"
                             : deal.status === "inspecting"
                             ? "#fef3c7"
                             : "#ecfdf5",
                         color:
                           deal.status === "completed"
                             ? "#15803d"
+                            : deal.status === "rejected"
+                            ? "#b91c1c"
+                            : deal.status === "cancelled"
+                            ? "#475569"
                             : deal.status === "inspecting"
                             ? "#b45309"
                             : "#047857",
@@ -202,8 +258,14 @@ export default function TradesPage() {
                     >
                       {deal.status === "completed"
                         ? "Đã hoàn tất"
+                        : deal.status === "rejected"
+                        ? "Đã từ chối"
+                        : deal.status === "cancelled"
+                        ? "Đã hủy giao dịch"
                         : deal.status === "inspecting"
                         ? "Đang kiểm định phần cứng"
+                        : deal.status === "pending"
+                        ? "Chờ phản hồi"
                         : "Đang đàm phán"}
                     </span>
                   </div>
@@ -230,7 +292,7 @@ export default function TradesPage() {
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px", color: "#64748b" }}>
                     <div>
-                      Đối tác: <strong>{deal.proposerName === "Tuấn Anh" ? deal.receiverName : deal.proposerName}</strong>
+                      Đối tác: <strong>{deal.proposerId === currentUserId ? deal.receiverName : deal.proposerName}</strong>
                     </div>
                     <div>Bước {deal.currentStep}/5 • {deal.updatedAt}</div>
                   </div>
@@ -416,36 +478,40 @@ export default function TradesPage() {
                 </div>
               </div>
 
-              <div style={{ marginTop: "24px", display: "flex", gap: "12px" }}>
-                {selectedDeal.currentStep < 5 && (
-                  <button
-                    onClick={() => handleAdvanceStep(selectedDeal.id)}
-                    disabled={selectedDeal.status === "pending" && selectedDeal.proposerId === getStoredAuthUser()?.id}
+              <div style={{ marginTop: "24px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                {selectedDeal.status === "rejected" ? (
+                  <div
                     style={{
                       flex: 1,
-                      background: "linear-gradient(135deg, #10b981, #059669)",
-                      color: "#ffffff",
-                      border: "none",
-                      padding: "14px 24px",
+                      textAlign: "center",
+                      padding: "14px",
+                      background: "#fee2e2",
+                      color: "#b91c1c",
                       borderRadius: "12px",
+                      fontWeight: "800",
                       fontSize: "14px",
-                      fontWeight: "700",
-                      cursor: "pointer",
-                      boxShadow: "0 6px 20px rgba(16, 185, 129, 0.35)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "8px",
-                      transition: "transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease",
+                      border: "1px solid #fecaca",
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-2px) scale(1.01)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0) scale(1)")}
                   >
-                    <span>{selectedDeal.status === "pending" ? (selectedDeal.proposerId === getStoredAuthUser()?.id ? "Đang chờ đối tác phản hồi" : "Chấp nhận đề xuất") : `Xác nhận hoàn tất Bước ${selectedDeal.currentStep}`}</span>
-                    <span style={{ fontSize: "16px" }}>→</span>
-                  </button>
-                )}
-                {selectedDeal.currentStep === 5 && (
+                    ✕ Đề xuất trao đổi đã bị người đăng từ chối.
+                  </div>
+                ) : selectedDeal.status === "cancelled" ? (
+                  <div
+                    style={{
+                      flex: 1,
+                      textAlign: "center",
+                      padding: "14px",
+                      background: "#f1f5f9",
+                      color: "#475569",
+                      borderRadius: "12px",
+                      fontWeight: "800",
+                      fontSize: "14px",
+                      border: "1px solid #cbd5e1",
+                    }}
+                  >
+                    ⊘ Giao dịch trao đổi đã bị hủy.
+                  </div>
+                ) : selectedDeal.status === "completed" || selectedDeal.currentStep === 5 ? (
                   <div
                     style={{
                       flex: 1,
@@ -461,6 +527,100 @@ export default function TradesPage() {
                   >
                     🎉 Giao Dịch Hoàn Tất Thành Công!
                   </div>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => handleAdvanceStep(selectedDeal.id)}
+                      disabled={isUpdating || (selectedDeal.status === "pending" && selectedDeal.proposerId === currentUserId)}
+                      style={{
+                        flex: 1,
+                        background:
+                          selectedDeal.status === "pending" && selectedDeal.proposerId === currentUserId
+                            ? "#94a3b8"
+                            : "linear-gradient(135deg, #10b981, #059669)",
+                        color: "#ffffff",
+                        border: "none",
+                        padding: "14px 24px",
+                        borderRadius: "12px",
+                        fontSize: "14px",
+                        fontWeight: "700",
+                        cursor:
+                          isUpdating || (selectedDeal.status === "pending" && selectedDeal.proposerId === currentUserId)
+                            ? "not-allowed"
+                            : "pointer",
+                        boxShadow:
+                          selectedDeal.status === "pending" && selectedDeal.proposerId === currentUserId
+                            ? "none"
+                            : "0 6px 20px rgba(16, 185, 129, 0.35)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "8px",
+                        transition: "transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease",
+                      }}
+                    >
+                      <span>
+                        {selectedDeal.status === "pending"
+                          ? selectedDeal.proposerId === currentUserId
+                            ? "Đang chờ đối tác phản hồi"
+                            : "Chấp nhận đề xuất"
+                          : `Xác nhận hoàn tất Bước ${selectedDeal.currentStep}`}
+                      </span>
+                      <span style={{ fontSize: "16px" }}>→</span>
+                    </button>
+
+                    {/* Nút Từ chối dành cho người đăng tin (receiver) khi đề xuất đang chờ phản hồi */}
+                    {selectedDeal.receiverId === currentUserId && selectedDeal.status === "pending" && (
+                      <button
+                        type="button"
+                        onClick={() => handleRejectTrade(selectedDeal.id)}
+                        disabled={isUpdating}
+                        style={{
+                          background: "#fef2f2",
+                          color: "#dc2626",
+                          border: "1.5px solid #fca5a5",
+                          padding: "14px 20px",
+                          borderRadius: "12px",
+                          fontSize: "14px",
+                          fontWeight: "800",
+                          cursor: isUpdating ? "not-allowed" : "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "6px",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        <span>✕</span> Từ chối
+                      </button>
+                    )}
+
+                    {/* Nút Hủy giao dịch dành cho người đổi (proposer) khi giao dịch chưa kết thúc */}
+                    {selectedDeal.proposerId === currentUserId && (
+                      <button
+                        type="button"
+                        onClick={() => handleCancelTrade(selectedDeal.id)}
+                        disabled={isUpdating}
+                        style={{
+                          background: "#fef2f2",
+                          color: "#dc2626",
+                          border: "1.5px solid #fca5a5",
+                          padding: "14px 20px",
+                          borderRadius: "12px",
+                          fontSize: "14px",
+                          fontWeight: "800",
+                          cursor: isUpdating ? "not-allowed" : "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "6px",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        <span>✕</span> Hủy giao dịch
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </div>

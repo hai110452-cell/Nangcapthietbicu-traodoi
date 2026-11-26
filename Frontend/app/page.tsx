@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Navbar from "./components/Navbar";
 import ProductReviewModal from "./components/ProductReviewModal";
+import ProductDetailModal from "./components/ProductDetailModal";
 import rawStyles from "./page.module.css";
 
 // Đảm bảo class name luôn hoạt động mượt mà trong cả môi trường CSS Module lẫn Global CSS
@@ -22,6 +23,7 @@ import {
   defaultCategories,
   defaultWebsiteConfig,
   fallbackExchangeItems,
+  getStoredAuthUser,
 } from "./lib/store";
 import { api, formatMoney, getAccessToken, moneyToNumber } from "./lib/api";
 import { searchWithAI, AISearchResult } from "./lib/ai-service";
@@ -51,6 +53,19 @@ export default function HomePage() {
 
   // Trạng thái Modal Đánh giá & Bình luận sản phẩm
   const [selectedReviewItem, setSelectedReviewItem] = useState<ExchangeItem | null>(null);
+
+  // Trạng thái Modal Xem chi tiết sản phẩm
+  const [selectedDetailItem, setSelectedDetailItem] = useState<ExchangeItem | null>(null);
+
+  // Trạng thái đăng nhập của người dùng
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+
+  useEffect(() => {
+    const syncAuth = () => setIsLoggedIn(Boolean(getStoredAuthUser()));
+    syncAuth();
+    window.addEventListener("cep_auth_updated", syncAuth);
+    return () => window.removeEventListener("cep_auth_updated", syncAuth);
+  }, []);
 
   // Trạng thái Máy tính định giá bù trừ thông minh
   const [deviceA, setDeviceA] = useState<number>(0);
@@ -241,50 +256,52 @@ export default function HomePage() {
             {siteConfig.heroDescription}
           </p>
 
-          <div style={{ display: "flex", gap: "16px", justifyContent: "center", marginBottom: "36px", flexWrap: "wrap" }}>
-            <Link
-              href="/post-item"
-              style={{
-                background: "linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%)",
-                color: "#ffffff",
-                padding: "13px 26px",
-                borderRadius: "12px",
-                fontWeight: "800",
-                fontSize: "14px",
-                textDecoration: "none",
-                boxShadow: "0 8px 24px rgba(4, 120, 87, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.25)",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
-              }}
-            >
-              Đăng Tin Thiết Bị
-            </Link>
-            <Link
-              href="/trades"
-              style={{
-                background: "rgba(255, 255, 255, 0.1)",
-                color: "#ffffff",
-                border: "1px solid rgba(255, 255, 255, 0.25)",
-                backdropFilter: "blur(12px)",
-                WebkitBackdropFilter: "blur(12px)",
-                padding: "13px 26px",
-                borderRadius: "12px",
-                fontWeight: "700",
-                fontSize: "14px",
-                textDecoration: "none",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                boxShadow: "0 4px 16px rgba(0, 0, 0, 0.15)",
-                transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
-              }}
-            >
-              Theo Dõi Tiến Trình Đổi Đồ
-            </Link>
-          </div>
+          {isLoggedIn && (
+            <div style={{ display: "flex", gap: "16px", justifyContent: "center", marginBottom: "36px", flexWrap: "wrap" }}>
+              <Link
+                href="/post-item"
+                style={{
+                  background: "linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%)",
+                  color: "#ffffff",
+                  padding: "13px 26px",
+                  borderRadius: "12px",
+                  fontWeight: "800",
+                  fontSize: "14px",
+                  textDecoration: "none",
+                  boxShadow: "0 8px 24px rgba(4, 120, 87, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.25)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+                }}
+              >
+                Đăng Tin Thiết Bị
+              </Link>
+              <Link
+                href="/trades"
+                style={{
+                  background: "rgba(255, 255, 255, 0.1)",
+                  color: "#ffffff",
+                  border: "1px solid rgba(255, 255, 255, 0.25)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                  padding: "13px 26px",
+                  borderRadius: "12px",
+                  fontWeight: "700",
+                  fontSize: "14px",
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  boxShadow: "0 4px 16px rgba(0, 0, 0, 0.15)",
+                  transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+                }}
+              >
+                Theo Dõi Tiến Trình Đổi Đồ
+              </Link>
+            </div>
+          )}
           </div>
       </section>
 
@@ -409,7 +426,12 @@ export default function HomePage() {
               }}
             >
               {/* Phần hình ảnh & badge */}
-              <div className={styles.cardVisualBanner} style={{ background: item.gradientBg, position: "relative", overflow: "hidden" }}>
+              <div
+                className={styles.cardVisualBanner}
+                style={{ background: item.gradientBg, position: "relative", overflow: "hidden", cursor: "pointer" }}
+                onClick={() => setSelectedDetailItem(item)}
+                title="Nhấn để xem chi tiết sản phẩm và hình ảnh"
+              >
                 {item.images && item.images.length > 0 ? (
                   <>
                     <img
@@ -471,7 +493,14 @@ export default function HomePage() {
                   </div>
                 )}
 
-                <h3 className={styles.productTitle}>{item.title}</h3>
+                <h3
+                  className={styles.productTitle}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setSelectedDetailItem(item)}
+                  title="Nhấn để xem chi tiết sản phẩm"
+                >
+                  {item.title}
+                </h3>
 
                 {/* Thông số kỹ thuật tóm tắt */}
                 <div className={styles.specsList}>
@@ -512,35 +541,54 @@ export default function HomePage() {
                 </div>
 
                 {/* Nút hành động */}
-                <div className={styles.cardActionButtons}>
-                  <button
-                    className={styles.btnProposeTrade}
-                    onClick={() => {
-                      setSelectedItem(item);
-                      setIsSubmitted(false);
-                    }}
-                  >
-                    Đề xuất đổi máy
-                  </button>
-                  <button
-                    className={styles.btnDetail}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      justifyContent: "center",
-                      color: "#065f46",
-                      fontWeight: 800,
-                      borderColor: "rgba(16, 185, 129, 0.4)",
-                      background: "#f0fdf4",
-                    }}
-                    onClick={() => {
-                      setSelectedReviewItem(item);
-                    }}
-                    title="Xem chi tiết, viết nhận xét và chấm sao cho thiết bị này"
-                  >
-                    <span>💬</span> Đánh giá ({item.reviewCount || 0})
-                  </button>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "18px" }}>
+                  {isLoggedIn && (
+                    <button
+                      className={styles.btnProposeTrade}
+                      style={{ width: "100%" }}
+                      onClick={() => {
+                        setSelectedItem(item);
+                        setIsSubmitted(false);
+                      }}
+                    >
+                      Đề xuất đổi máy
+                    </button>
+                  )}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                    <button
+                      className={styles.btnDetail}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        justifyContent: "center",
+                        fontWeight: 700,
+                      }}
+                      onClick={() => setSelectedDetailItem(item)}
+                      title="Xem chi tiết sản phẩm và toàn bộ hình ảnh"
+                    >
+                      <span>🔍</span> Xem chi tiết
+                    </button>
+                    <button
+                      className={styles.btnDetail}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        justifyContent: "center",
+                        color: "#065f46",
+                        fontWeight: 800,
+                        borderColor: "rgba(16, 185, 129, 0.4)",
+                        background: "#f0fdf4",
+                      }}
+                      onClick={() => {
+                        setSelectedReviewItem(item);
+                      }}
+                      title="Xem nhận xét, viết bình luận và chấm sao cho thiết bị này"
+                    >
+                      <span>💬</span> Đánh giá ({item.reviewCount || 0})
+                    </button>
+                  </div>
                 </div>
               </div>
             </article>
@@ -774,6 +822,25 @@ export default function HomePage() {
           onClose={() => setSelectedReviewItem(null)}
           item={selectedReviewItem}
           onReviewsUpdated={handleReviewsUpdated}
+        />
+      )}
+
+      {/* ========================================================
+          7C. MODAL XEM CHI TIẾT SẢN PHẨM & GALLERY HÌNH ẢNH
+          ======================================================== */}
+      {selectedDetailItem && (
+        <ProductDetailModal
+          isOpen={!!selectedDetailItem}
+          onClose={() => setSelectedDetailItem(null)}
+          item={selectedDetailItem}
+          isLoggedIn={isLoggedIn}
+          onProposeTrade={(target) => {
+            setSelectedItem(target);
+            setIsSubmitted(false);
+          }}
+          onOpenReviews={(target) => {
+            setSelectedReviewItem(target);
+          }}
         />
       )}
 

@@ -63,16 +63,16 @@ export default function Navbar() {
     setAuthUser(null);
     setCurrentRole("user");
     alert("Đã đăng xuất tài khoản thành công!");
-    if (pathname === "/admin") {
+    if (pathname === "/admin" || pathname === "/trades" || pathname === "/post-item") {
       window.location.href = "/";
     }
   };
 
-  // Danh sách tính năng dựa theo vai trò (Người dùng KHÔNG THẤY mục Quản trị)
+  // Danh sách tính năng dựa theo trạng thái đăng nhập & vai trò
   const navItems = [
     { label: "Khám phá", href: "/" },
-    { label: "Đổi đồ & Tiến trình", href: "/trades" },
-    ...(currentRole === "admin"
+    ...(authUser ? [{ label: "Đổi đồ & Tiến trình", href: "/trades" }] : []),
+    ...(authUser && currentRole === "admin"
       ? [{ label: "Quản trị Toàn Web", href: "/admin", isCMS: true }]
       : []),
   ];
@@ -209,28 +209,30 @@ export default function Navbar() {
 
           {/* Các nút hành động bên phải: Tài khoản & Đăng tin */}
           <div className="headerActions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            {/* Nút Đăng tin trao đổi */}
-            <Link
-              href="/post-item"
-              className="btnPostTrade"
-              style={{
-                textDecoration: "none",
-                background: "linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%)",
-                color: "#ffffff",
-                padding: "8px 16px",
-                borderRadius: "10px",
-                fontSize: "13px",
-                fontWeight: "700",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                boxShadow: "0 4px 14px rgba(4, 120, 87, 0.25)",
-                border: "1px solid rgba(255, 255, 255, 0.15)",
-                transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
-              }}
-            >
-              Đăng tin
-            </Link>
+            {/* Nút Đăng tin trao đổi (chỉ hiển thị khi đã đăng nhập) */}
+            {authUser && (
+              <Link
+                href="/post-item"
+                className="btnPostTrade"
+                style={{
+                  textDecoration: "none",
+                  background: "linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%)",
+                  color: "#ffffff",
+                  padding: "8px 16px",
+                  borderRadius: "10px",
+                  fontSize: "13px",
+                  fontWeight: "700",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  boxShadow: "0 4px 14px rgba(4, 120, 87, 0.25)",
+                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                  transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+                }}
+              >
+                Đăng tin
+              </Link>
+            )}
 
             {/* Thông tin tài khoản đăng nhập */}
             {authUser ? (
